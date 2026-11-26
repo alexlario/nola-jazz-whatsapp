@@ -32,11 +32,24 @@ export function buildHotelLinks({ checkInDate = '2027-02-11', checkOutDate = '20
 }
 
 function overlapsCarnivalPeak(checkInDate, checkOutDate) {
-  // Peak surge runs heavily from Thu 2027-02-04 through Fat Tuesday 2027-02-09
   return checkInDate <= '2027-02-09' && checkOutDate > '2027-02-04';
 }
 
-async function fetchLiveHotelsFromSerpApi({ checkInDate, checkOutDate, query = 'New Orleans CBD hotels' }) {
+function mapMinRatingParam(minRating) {
+  const num = Number(minRating);
+  if (!Number.isFinite(num) || num <= 0) return 'AT_LEAST_4_0';
+  if (num >= 4.5) return 'AT_LEAST_4_5';
+  if (num >= 4.0) return 'AT_LEAST_4_0';
+  return 'AT_LEAST_3_5';
+}
+
+async function fetchLiveHotelsFromSerpApi({
+  checkInDate,
+  checkOutDate,
+  query = 'New Orleans French Quarter CBD quiet hotels',
+  maxPriceEur = null,
+  minRating = 4.0,
+}) {
   if (!config.serpApiKey) return null;
 
   const params = new URLSearchParams({
@@ -48,9 +61,14 @@ async function fetchLiveHotelsFromSerpApi({ checkInDate, checkOutDate, query = '
     currency: 'EUR',
     hl: 'es',
     gl: 'es',
-    sort_by: '13', // highest rated / best value when available
+    sort_by: '8', // highest rating / best quality first
+    rating: mapMinRatingParam(minRating),
     api_key: config.serpApiKey,
   });
+
+  if (Number.isFinite(Number(maxPriceEur)) && Number(maxPriceEur) > 40) {
+    params.set('max_price', String(Math.round(Number(maxPriceEur))));
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 6000);
@@ -65,12 +83,14 @@ async function fetchLiveHotelsFromSerpApi({ checkInDate, checkOutDate, query = '
       name: p.name,
       rating: p.overall_rating ?? null,
       reviews: p.reviews ?? null,
-      ratePerNight: p.rate_per_night?.lowest ?? null,
-      totalRate: p.total_rate?.lowest ?? null,
-      neighborhood: p.neighborhood || null,
+      ratePerNightEur: p.rate_per_night?.extracted_lowest ?? p.rate_per_night?.lowest ?? null,
+      totalRateEur: p.total_rate?.extracted_lowest ?? p.total_rate?.lowest ?? null,
+      amenities: Array.isArray(p.amenities) ? p.amenities.slice(0, 5) : [],
+      link: p.link || null,
     }));
     return {
       source: 'Google Hotels en vivo (SerpApi)',
+      queryUsed: query,
       properties: props,
     };
   } catch (err) {
@@ -84,6 +104,8 @@ export async function recommendHotels({
   checkInDate = '2027-02-11',
   checkOutDate = '2027-02-17',
   budgetLevel = 'balanced',
+  maxPriceEur = null,
+  minRating = 4.0,
   checkLive = true,
 } = {}) {
   const safeIn = isValidIsoDate(checkInDate) ? checkInDate : '2027-02-11';
@@ -92,23 +114,63 @@ export async function recommendHotels({
 
   let liveData = null;
   if (checkLive && config.serpApiKey) {
-    const query =
-      budgetLevel === 'jazz_walkable'
-        ? 'New Orleans Marigny French Quarter hotels'
-        : 'New Orleans CBD Warehouse District hotels';
-    liveData = await fetchLiveHotelsFromSerpApi({ checkInDate: safeIn, checkOutDate: safeOut, query });
+    if (budgetLevel === 'historic_quarter') {
+      liveData = await fetchLiveHotelsFromSerpApi({
+        checkInDate: safeIn,
+        checkOutDate: safeOut,
+        query: 'New Orleans French Quarter quiet hotels',
+        maxPriceEur,
+        minRating,
+      });
+    } else if (budgetLevel === 'jazz_walkable') {
+      liveData = await fetchLiveHotelsFromSerpApi({
+        checkInDate: safeIn,
+        checkOutDate: safeOut,
+        query: 'New Orleans Faubourg Marigny Frenchmen Street hotels',
+        maxPriceEur,
+        minRating,
+      });
+    } else {
+      const [cbdLive, fqLive] = await Promise.all([
+        fetchLiveHotelsFromSerpApi({
+          checkInDate: safeIn,
+          checkOutDate: safeOut,
+          query: 'New Orleans CBD Warehouse District hotels',
+          maxPriceEur,
+          minRating,
+        }),
+        fetchLiveHotelsFromSerpApi({
+          checkInDate: safeIn,
+          checkOutDate: safeOut,
+          query: 'New Orleans French Quarter hotels',
+          maxPriceEur,
+          minRating,
+        }),
+      ]);
+      liveData = {
+        cbdValue: cbdLive,
+        frenchQuarter: fqLive,
+      };
+    }
   }
 
   return {
     checkInDate: safeIn,
     checkOutDate: safeOut,
+    filtersApplied: {
+      budgetLevel,
+      minRating,
+      ...(maxPriceEur ? { maxPriceEur } : {}),
+    },
     carnivalSurgeWarning: isCarnivalPeak
-      ? 'Atención: estas fechas tocan el fin de semana previo a Mardi Gras (del 4 al 9 de feb), donde los hoteles suelen subir un 150–300% y exigir mínimos de estancia. Si adelantas la salida o mueves al 10–17 feb ahorrarás bastante.'
+      ? 'Atención: estas fechas tocan los días grandes de Mardi Gras (del 4 al 9 de feb), donde los hoteles céntricos suben a ~340–400 €/noche o más. Si mueve al 10–17 feb ahorrará aprox. un 30–40%.'
       : 'Excelente elección de fechas: fuera del pico de Mardi Gras los hoteles recuperan tarifas normales de invierno (aprox. 30–40% más económicas).',
     recommendedZoneOrder:
       budgetLevel === 'jazz_walkable'
         ? ['marigny', 'cbd', 'french-quarter']
-        : ['cbd', 'marigny', 'french-quarter'],
+        : budgetLevel === 'historic_quarter'
+          ? ['french-quarter', 'cbd', 'marigny']
+          : ['cbd', 'marigny', 'french-quarter'],
     zones: HOTEL_ZONES,
     seniorFriendlyExamples: SENIOR_FRIENDLY_HOTELS,
     bookingLinks: {

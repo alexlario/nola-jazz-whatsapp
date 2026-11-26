@@ -1,6 +1,8 @@
 import { config } from '../config.js';
 import { ZARAGOZA_ROUTES } from '../data/travelKnowledge.js';
 
+const EUROPEAN_HUBS = new Set(['LHR', 'LGW', 'CDG', 'ORY', 'FRA', 'MUC', 'AMS', 'DUB', 'MAD', 'BCN', 'LIS', 'ZRH']);
+
 function isValidIsoDate(value) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
@@ -25,6 +27,75 @@ export function buildFlightLinks({ origin = 'MAD', destination = 'MSY', outbound
   };
 }
 
+function parseHour(timeStr) {
+  if (typeof timeStr !== 'string') return null;
+  const match = timeStr.match(/\b(\d{1,2}):(\d{2})\b/);
+  return match ? Number.parseInt(match[1], 10) : null;
+}
+
+export function scoreFlightForSeniorTraveler(offer) {
+  let score = 100;
+  if (offer.stops > 1) score -= 35;
+  if (offer.hasOvernightLayover) score -= 25;
+  if (offer.totalDurationMin && offer.totalDurationMin > 1020) score -= 12; // >17h
+  if (offer.layoverMinutesMax && offer.layoverMinutesMax > 300) score -= 10; // >5h
+  if (offer.layoverMinutesMin && offer.layoverMinutesMin < 95 && !offer.usImmigrationAtMSY) {
+    score -= 18; // Conexión justa en EE. UU. pasando inmigración
+  }
+  if (offer.usImmigrationAtMSY) score += 8; // Escala en Europa -> inmigración cómoda al llegar a MSY
+
+  const depHour = parseHour(offer.departureTime);
+  if (depHour !== null && depHour >= 9 && depHour <= 15) {
+    score += 6; // Horario diurno cómodo para enlazar AVE desde Zaragoza por la mañana
+  } else if (depHour !== null && depHour < 8) {
+    score -= 8; // Muy temprano para salir desde Zaragoza el mismo día
+  }
+
+  if (typeof offer.priceEur === 'number') {
+    score -= Math.round(Math.max(0, offer.priceEur - 600) / 40);
+  }
+  return Math.max(0, Math.min(100, score));
+}
+
+export function summarizeSerpApiFlightOffer(item) {
+  const legs = item.flights || [];
+  const firstLeg = legs[0] || {};
+  const lastLeg = legs[legs.length - 1] || {};
+  const stopsCount = Math.max(0, legs.length - 1);
+  const layoverObjs = item.layovers || [];
+
+  const layovers = layoverObjs.map((l) => {
+    const hrs = l.duration ? `${Math.round((l.duration / 60) * 10) / 10}h` : '?';
+    return `${l.id || l.name || 'Escala'} (${hrs}${l.overnight ? ', noche' : ''})`;
+  });
+
+  const layoverHubs = layoverObjs.map((l) => String(l.id || '').toUpperCase()).filter(Boolean);
+  const usImmigrationAtMSY =
+    stopsCount > 0 && layoverHubs.length > 0 && layoverHubs.every((hub) => EUROPEAN_HUBS.has(hub));
+
+  const durations = layoverObjs.map((l) => Number(l.duration || 0)).filter((d) => d > 0);
+  const airlines = [...new Set(legs.map((l) => l.airline).filter(Boolean))];
+  const departureTime = firstLeg.departure_airport?.time || null;
+  const arrivalTime = lastLeg.arrival_airport?.time || null;
+
+  const summary = {
+    priceEur: item.price ?? null,
+    totalDurationMin: item.total_duration ?? null,
+    stops: stopsCount,
+    airlines,
+    departureTime,
+    arrivalTime,
+    layovers,
+    hasOvernightLayover: layoverObjs.some((l) => Boolean(l.overnight)) || legs.some((l) => Boolean(l.overnight)),
+    layoverMinutesMin: durations.length ? Math.min(...durations) : null,
+    layoverMinutesMax: durations.length ? Math.max(...durations) : null,
+    usImmigrationAtMSY,
+  };
+
+  summary.comfortScore = scoreFlightForSeniorTraveler(summary);
+  return summary;
+}
+
 async function fetchLiveFlightsFromSerpApi({ origin, destination = 'MSY', outboundDate, returnDate }) {
   if (!config.serpApiKey) return null;
 
@@ -34,7 +105,7 @@ async function fetchLiveFlightsFromSerpApi({ origin, destination = 'MSY', outbou
     arrival_id: destination,
     outbound_date: outboundDate,
     return_date: returnDate,
-    stops: '2', // 0=any, 1=nonstop, 2=1 stop or fewer
+    stops: '2', // 1 stop or fewer
     currency: 'EUR',
     hl: 'es',
     gl: 'es',
@@ -52,25 +123,15 @@ async function fetchLiveFlightsFromSerpApi({ origin, destination = 'MSY', outbou
       return { error: `SerpApi devolvió HTTP ${res.status}` };
     }
     const json = await res.json();
-    const candidates = [...(json.best_flights || []), ...(json.other_flights || [])].slice(0, 6);
-
-    const formatted = candidates.map((item) => {
-      const legs = item.flights || [];
-      const stopsCount = Math.max(0, legs.length - 1);
-      const layovers = (item.layovers || []).map((l) => `${l.name || l.id} (${Math.round((l.duration || 0) / 60 * 10) / 10}h)`);
-      const airlines = [...new Set(legs.map((l) => l.airline).filter(Boolean))];
-      return {
-        priceEur: item.price ?? null,
-        totalDurationMin: item.total_duration ?? null,
-        stops: stopsCount,
-        airlines,
-        layovers,
-      };
-    });
+    const candidates = [...(json.best_flights || []), ...(json.other_flights || [])]
+      .slice(0, 8)
+      .map(summarizeSerpApiFlightOffer)
+      .sort((a, b) => b.comfortScore - a.comfortScore || (a.priceEur ?? 9999) - (b.priceEur ?? 9999))
+      .slice(0, 5);
 
     return {
-      source: 'Google Flights en vivo (SerpApi)',
-      offers: formatted,
+      source: 'Google Flights en vivo (SerpApi, ordenados por comodidad/precio para 74 años)',
+      offers: candidates,
     };
   } catch (err) {
     return { error: err.name === 'AbortError' ? 'Tiempo de espera agotado consultando vuelos en vivo' : err.message };
@@ -82,6 +143,8 @@ async function fetchLiveFlightsFromSerpApi({ origin, destination = 'MSY', outbou
 export async function analyzeZaragozaRoutes({
   outboundDate = '2027-02-11',
   returnDate = '2027-02-17',
+  alternateOutboundDate = null,
+  alternateReturnDate = null,
   priority = 'balanced',
   checkLive = true,
 } = {}) {
@@ -95,12 +158,34 @@ export async function analyzeZaragozaRoutes({
   };
 
   let liveData = null;
+  let alternateLiveData = null;
+
   if (checkLive && config.serpApiKey) {
-    const [madLive, bcnLive] = await Promise.all([
+    const tasks = [
       fetchLiveFlightsFromSerpApi({ origin: 'MAD', outboundDate: safeOut, returnDate: safeRet }),
       fetchLiveFlightsFromSerpApi({ origin: 'BCN', outboundDate: safeOut, returnDate: safeRet }),
-    ]);
-    liveData = { MAD: madLive, BCN: bcnLive };
+    ];
+
+    const hasAlt = isValidIsoDate(alternateOutboundDate) && isValidIsoDate(alternateReturnDate);
+    if (hasAlt) {
+      tasks.push(
+        fetchLiveFlightsFromSerpApi({
+          origin: 'MAD',
+          outboundDate: alternateOutboundDate,
+          returnDate: alternateReturnDate,
+        }),
+      );
+    }
+
+    const results = await Promise.all(tasks);
+    liveData = { MAD: results[0], BCN: results[1] };
+    if (hasAlt) {
+      alternateLiveData = {
+        outboundDate: alternateOutboundDate,
+        returnDate: alternateReturnDate,
+        MAD: results[2],
+      };
+    }
   }
 
   return {
@@ -108,11 +193,12 @@ export async function analyzeZaragozaRoutes({
     returnDate: safeRet,
     priority,
     verdictForDad:
-      'La opción más equilibrada en comodidad, seguridad y precio desde Zaragoza es coger un AVE/Iryo/Ouigo a Madrid-Atocha (~1h15–1h30) o Barcelona-Sants (~1h35–1h50) y volar en billete único con 1 sola escala a Nueva Orleans (MSY). Salir desde el aeropuerto de Zaragoza (ZAZ) obliga a billetes separados (por ejemplo vía Londres Stansted), cambiar de aeropuerto en Londres y asumir el riesgo si hay retrasos.',
+      'La opción más equilibrada en comodidad, seguridad y precio desde Zaragoza (74 años) es AVE/Iryo/Ouigo a Madrid-Atocha (~1h15–1h30) o Barcelona-Sants (~1h35–1h50) y vuelo en billete único con 1 sola escala a Nueva Orleans (MSY). Si la escala es en Londres (LHR/BA-Iberia), haces inmigración de EE. UU. directo en MSY sin prisas en la escala. Salir desde Zaragoza (ZAZ) obliga a billetes separados y cambio de aeropuerto.',
     routes: ZARAGOZA_ROUTES,
     bookingLinks: links,
     liveSearch: liveData || {
       source: 'Estimación verificada + enlaces directos (configura SERPAPI_API_KEY si quieres tarifas exactas en tiempo real dentro del chat)',
     },
+    ...(alternateLiveData ? { alternateDatesLiveSearch: alternateLiveData } : {}),
   };
 }

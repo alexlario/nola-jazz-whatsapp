@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { compareFebruaryWindows } from '../src/tools/dates.js';
-import { analyzeZaragozaRoutes, buildFlightLinks } from '../src/tools/flights.js';
+import { analyzeZaragozaRoutes, buildFlightLinks, summarizeSerpApiFlightOffer } from '../src/tools/flights.js';
 import { recommendHotels, buildHotelLinks } from '../src/tools/hotels.js';
 import { planJazzItinerary } from '../src/tools/jazz.js';
+import { searchLiveNolaJazz } from '../src/tools/liveSearch.js';
 import { formatForWhatsApp, splitWhatsAppMessage } from '../src/utils/whatsappFormat.js';
 
 test('compareFebruaryWindows identifies Mardi Gras 2027 on Feb 9 and compares all windows', () => {
@@ -74,7 +75,7 @@ test('planJazzItinerary includes core traditional venues, closed Palm Court warn
   assert.match(plan.practicalTips.airportTransfer, /\$36/);
 });
 
-test('formatForWhatsApp and splitWhatsAppMessage convert markdown and split cleanly', () => {
+test('formatForWhatsApp and splitWhatsAppMessage convert markdown and split cleanly (extra)', () => {
   const formatted = formatForWhatsApp('## Título\n\nTexto **en negrita** con [Google](https://google.com)');
   assert.equal(formatted, '*Título*\n\nTexto *en negrita* con Google: https://google.com');
 
@@ -84,4 +85,36 @@ test('formatForWhatsApp and splitWhatsAppMessage convert markdown and split clea
   for (const chunk of chunks) {
     assert.ok(chunk.length <= 300);
   }
+});
+
+test('summarizeSerpApiFlightOffer scores daytime LHR stop (MSY immigration) above tight/overnight US stop', () => {
+  const lhrFlight = summarizeSerpApiFlightOffer({
+    price: 680,
+    total_duration: 840,
+    flights: [
+      { airline: 'British Airways', departure_airport: { time: '2027-02-04 10:15' }, arrival_airport: { time: '2027-02-04 11:45' } },
+      { airline: 'British Airways', departure_airport: { time: '2027-02-04 14:15' }, arrival_airport: { time: '2027-02-04 19:15' } },
+    ],
+    layovers: [{ id: 'LHR', name: 'London Heathrow', duration: 150, overnight: false }],
+  });
+
+  const tightUsFlight = summarizeSerpApiFlightOffer({
+    price: 680,
+    total_duration: 1120,
+    flights: [
+      { airline: 'American', departure_airport: { time: '2027-02-04 06:30' }, arrival_airport: { time: '2027-02-04 10:30' } },
+      { airline: 'American', departure_airport: { time: '2027-02-04 11:50' }, arrival_airport: { time: '2027-02-04 18:10' } },
+    ],
+    layovers: [{ id: 'CLT', name: 'Charlotte', duration: 80, overnight: true }],
+  });
+
+  assert.equal(lhrFlight.usImmigrationAtMSY, true);
+  assert.equal(tightUsFlight.usImmigrationAtMSY, false);
+  assert.ok(lhrFlight.comfortScore > tightUsFlight.comfortScore);
+});
+
+test('searchLiveNolaJazz returns official fallback links when SERPAPI_API_KEY is unset', async () => {
+  const res = await searchLiveNolaJazz({ query: 'Snug Harbor February' });
+  assert.ok(res.suggestedLinks?.wwozLivewire);
+  assert.ok(res.suggestedLinks?.steamboatNatchez);
 });
