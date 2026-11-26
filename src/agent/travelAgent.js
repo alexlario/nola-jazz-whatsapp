@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import { config } from '../config.js';
 import { diagnostics, sanitizeMessage } from '../diagnostics.js';
 import { SessionStore } from '../storage/sessionStore.js';
@@ -9,10 +9,25 @@ import { runFallbackReply } from './fallbackEngine.js';
 
 const MAX_TOOL_ROUNDS = 4;
 const RECOMMENDED_GEMINI_MODEL = 'gemini-3.8-flash';
+const FAST_FALLBACK_GEMINI_MODEL = 'gemini-3.5-flash-lite';
 
 function isModelNotFoundError(err) {
   const msg = String(err?.message || '');
   return err?.status === 404 || msg.includes('"code":404') || msg.includes('NOT_FOUND');
+}
+
+function isAbortOrTimeoutError(err) {
+  const msg = String(err?.message || '');
+  return err?.name === 'AbortError' || msg.toLowerCase().includes('aborted') || msg.toLowerCase().includes('timeout');
+}
+
+function buildGeminiCallConfig(modelName, baseConfig) {
+  const supportsThinkingLevel = /^gemini-3\./i.test(modelName) && !/lite/i.test(modelName);
+  return {
+    ...baseConfig,
+    maxOutputTokens: 1200,
+    ...(supportsThinkingLevel ? { thinkingConfig: { thinkingLevel: ThinkingLevel.LOW } } : {}),
+  };
 }
 
 export class TravelAgent {
@@ -23,8 +38,8 @@ export class TravelAgent {
       ? new GoogleGenAI({
           apiKey: config.ai.geminiApiKey,
           httpOptions: {
-            timeout: 15000,
-            retryOptions: { attempts: 2 },
+            timeout: 12000,
+            retryOptions: { attempts: 1 },
           },
         })
       : null;
@@ -35,18 +50,27 @@ export class TravelAgent {
       return await this.geminiClient.models.generateContent({
         model: this.activeGeminiModel,
         contents,
-        config: configPayload,
+        config: buildGeminiCallConfig(this.activeGeminiModel, configPayload),
       });
     } catch (err) {
-      if (this.activeGeminiModel !== RECOMMENDED_GEMINI_MODEL && isModelNotFoundError(err)) {
+      const nextModel =
+        this.activeGeminiModel !== RECOMMENDED_GEMINI_MODEL && isModelNotFoundError(err)
+          ? RECOMMENDED_GEMINI_MODEL
+          : (isModelNotFoundError(err) || isAbortOrTimeoutError(err)) &&
+              this.activeGeminiModel !== FAST_FALLBACK_GEMINI_MODEL
+            ? FAST_FALLBACK_GEMINI_MODEL
+            : null;
+
+      if (nextModel) {
         console.warn(
-          `[TravelAgent] Modelo ${this.activeGeminiModel} no disponible; cambiando a ${RECOMMENDED_GEMINI_MODEL}`,
+          `[TravelAgent] Modelo ${this.activeGeminiModel} falló (${err.message}); probando ${nextModel}`,
         );
-        this.activeGeminiModel = RECOMMENDED_GEMINI_MODEL;
+        this.activeGeminiModel = nextModel;
+        diagnostics.lastGeminiModelTried = nextModel;
         return this.geminiClient.models.generateContent({
           model: this.activeGeminiModel,
           contents,
-          config: configPayload,
+          config: buildGeminiCallConfig(this.activeGeminiModel, configPayload),
         });
       }
       throw err;

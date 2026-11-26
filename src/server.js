@@ -144,7 +144,7 @@ export function createApp({ travelAgent = new TravelAgent() } = {}) {
 
       void (async () => {
         try {
-          await markMetaMessageAsRead(msg.id);
+          void markMetaMessageAsRead(msg.id);
           if (!msg.text) {
             await sendMetaWhatsAppText(
               msg.from,

@@ -53,7 +53,7 @@ async function fetchLiveHotelsFromSerpApi({ checkInDate, checkOutDate, query = '
   });
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 9000);
+  const timeout = setTimeout(() => controller.abort(), 6000);
 
   try {
     const res = await fetch(`https://serpapi.com/search.json?${params.toString()}`, {
