@@ -141,7 +141,7 @@ async function fetchLiveFlightsFromSerpApi({ origin, destination = 'MSY', outbou
     };
 
     return {
-      source: 'Google Flights en vivo (SerpApi, ordenados por comodidad/precio para 74 años)',
+      source: 'Google Flights en vivo (SerpApi, ordenados por comodidad y precio)',
       offers: candidates,
     };
   } catch (err) {
@@ -206,7 +206,7 @@ export async function analyzeZaragozaRoutes({
     returnDate: safeRet,
     priority,
     verdictForDad:
-      'La opción más equilibrada en comodidad, seguridad y precio desde Zaragoza (74 años) es AVE/Iryo/Ouigo a Madrid-Atocha (~1h15–1h30) o Barcelona-Sants (~1h35–1h50) y vuelo en billete único con 1 sola escala a Nueva Orleans (MSY). Si la escala es en Londres (LHR/BA-Iberia), haces inmigración de EE. UU. directo en MSY sin prisas en la escala. Salir desde Zaragoza (ZAZ) obliga a billetes separados y cambio de aeropuerto.',
+      'La opción más equilibrada en comodidad, seguridad y precio desde Zaragoza es AVE/Iryo/Ouigo a Madrid-Atocha (~1h15–1h30) o Barcelona-Sants (~1h35–1h50) y vuelo en billete único con 1 sola escala a Nueva Orleans (MSY). Si la escala es en Londres (LHR/BA-Iberia), haces inmigración de EE. UU. directo en MSY sin prisas en la escala. Salir desde Zaragoza (ZAZ) obliga a billetes separados y cambio de aeropuerto.',
     routes: ZARAGOZA_ROUTES,
     bookingLinks: links,
     liveSearch: liveData || {

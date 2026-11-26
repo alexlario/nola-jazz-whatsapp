@@ -14,7 +14,7 @@ function parseCsvList(value) {
 export const config = {
   port: Number.parseInt(process.env.PORT || '3000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
-  travelerName: (process.env.TRAVELER_NAME || 'tu padre').trim(),
+  travelerName: (process.env.TRAVELER_NAME || 'Antonio').trim(),
 
   ai: {
     geminiApiKey: (process.env.GEMINI_API_KEY || '').trim(),

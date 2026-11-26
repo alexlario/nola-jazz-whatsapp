@@ -10,6 +10,8 @@ import { extractMetaIncomingMessages } from '../src/channels/metaWhatsApp.js';
 import { createApp } from '../src/server.js';
 import { SessionStore } from '../src/storage/sessionStore.js';
 import { TravelAgent } from '../src/agent/travelAgent.js';
+import { buildSystemPrompt } from '../src/agent/systemPrompt.js';
+import { executeTool } from '../src/tools/index.js';
 
 async function withServer(fn) {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'nola-test-'));
@@ -78,6 +80,34 @@ test('TravelAgent retries with gemini-3.5-flash-lite when configured model retur
     assert.match(res.text, /Gemini 3\.5 Flash Lite/);
     assert.deepEqual(calledModels, ['gemini-2.5-flash', 'gemini-3.5-flash-lite']);
     assert.equal(agent.activeGeminiModel, 'gemini-3.5-flash-lite');
+  } finally {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('save_traveler_preferences persists Antonio notebook and buildSystemPrompt includes it without mentioning age', async () => {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'nola-notes-'));
+  const store = new SessionStore(path.join(tmpDir, 'sessions.json'));
+  try {
+    const out = await executeTool(
+      'save_traveler_preferences',
+      {
+        outboundDate: '2027-02-11',
+        returnDate: '2027-02-18',
+        preferredOrigin: 'MAD',
+        maxHotelPerNightEur: 190,
+        note: 'Prefiere asiento de pasillo y hoteles con patio tranquilo',
+      },
+      { sessionStore: store, sessionId: 'wa:34600000000' },
+    );
+    assert.equal(out.saved, true);
+
+    const session = await store.getSession('wa:34600000000');
+    const prompt = buildSystemPrompt(session.preferences);
+    assert.match(prompt, /Antonio/);
+    assert.match(prompt, /2027-02-11/);
+    assert.match(prompt, /asiento de pasillo/);
+    assert.doesNotMatch(prompt, /74/);
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }

@@ -79,7 +79,7 @@ export const FEBRUARY_2027_CARNIVAL = {
       ],
       pros: [
         'Permite vivir los días grandes de Mardi Gras sin perderse el jazz sentado.',
-        'Consejo de comodidad (74 años): comprar pase de grada con asiento y baños privados (Grandstand Tickets en St. Charles Ave, p. ej. Lafayette Square o Gallier Hall) en lugar de esperar de pie en Canal Street.',
+        'Consejo práctico: comprar pase de grada con asiento y baños privados (Grandstand Tickets en St. Charles Ave, p. ej. Lafayette Square o Gallier Hall) en lugar de esperar horas de pie en Canal Street.',
       ],
       cons: [
         'Tarifas hoteleras más altas del año; si prefiere ahorrar ~30–40% y más calma, es mejor viajar del 10–17 feb.',
@@ -110,7 +110,7 @@ export const ZARAGOZA_ROUTES = [
       protection: 'Billete único MAD–MSY: si se retrasa el primer vuelo, la aerolínea te reubica gratis.',
     },
     layoverAdvice:
-      'Para un viajero de 74 años, la escala en Londres-Heathrow (LHR con British Airways/Iberia) tiene una gran ventaja: haces inmigración de EE. UU. al llegar a Nueva Orleans (MSY, aeropuerto pequeño y cómodo) en lugar de hacerla en medio de una escala en EE. UU. Además conviene elegir asiento de pasillo en el tramo largo y pedir asistencia gratuita en aeropuerto si desea evitar caminatas largas.',
+      'La escala en Londres-Heathrow (LHR con British Airways/Iberia) tiene una gran ventaja práctica: haces inmigración de EE. UU. directamente al aterrizar en Nueva Orleans (MSY, aeropuerto pequeño y muy manejable) en lugar de hacerla en mitad de una escala intermedia en EE. UU. Conviene elegir asiento de pasillo en el tramo largo, revisar si la tarifa incluye maleta facturada y dejar 3h–3h30 entre llegada del AVE y embarque (o dormir la noche previa junto a Barajas si prefieres ir cero prisas).',
   },
   {
     id: 'ave-bcn',
@@ -150,7 +150,7 @@ export const ZARAGOZA_ROUTES = [
       protection: 'SIN protección: son billetes independientes. Si Ryanair se retrasa o cambia horario, pierdes el vuelo transatlántico.',
     },
     layoverAdvice:
-      'No recomendado para tu padre: desde Londres Stansted (STN) habría que cruzar Londres por carretera/tren (~1h30–2h+) hasta Heathrow (LHR) o Gatwick para volar a EE. UU. Solo tendría sentido si quisiera hacer noche turística en Londres o Roma a la ida y a la vuelta.',
+      'No suele compensar: desde Londres Stansted (STN) habría que cruzar Londres por carretera/tren (~1h30–2h+) hasta Heathrow (LHR) o Gatwick para volar a EE. UU. Solo tendría sentido si quisieras hacer noche turística en Londres o Roma a la ida y a la vuelta.',
   },
 ];
 
@@ -215,7 +215,7 @@ export const JAZZ_VENUES = [
     address: '726 St. Peter St.',
     style: 'Jazz tradicional de Nueva Orleans puro y sin amplificación',
     schedule: 'Varios pases cada noche (sesiones cortas de ~45 min)',
-    entry: 'CLAVE A LOS 74 AÑOS: reservar online con antelación las entradas con asiento reservado (Big Shot o fila delantera), porque la entrada general es de pie y requiere hacer cola en la calle.',
+    entry: 'Muy importante: reservar online con antelación las entradas con asiento reservado (Big Shot o fila delantera), porque la entrada general es de pie y requiere hacer cola en la calle.',
     idealForDad: true,
     url: 'https://www.preservationhall.com/',
   },
@@ -313,16 +313,20 @@ export const JAZZ_VENUES = [
 
 export const PRACTICAL_TIPS = {
   airportTransfer:
-    'Del aeropuerto MSY al centro/French Quarter: taxi oficial con tarifa plana regulada de $36 (1–2 personas, puerta 7 nivel 1) — la opción más cómoda para tu padre. Alternativa ultra económica: autobús RTA 202 Airport Express por $1,25 (puerta 2 nivel 1).',
+    'Del aeropuerto MSY al centro/French Quarter: taxi oficial con tarifa plana regulada de $36 (1–2 personas, puerta 7 nivel 1), la opción más directa y sin transbordos. Alternativa económica: autobús RTA 202 Airport Express por $1,25 (puerta 2 nivel 1).',
   liveScheduleLink: 'https://www.wwoz.org/calendar/livewire-music',
   closedWarning:
     'Nota importante: el histórico Palm Court Jazz Cafe cerró en su formato tradicional, así que mejor no incluirlo en la ruta.',
   entryDocs:
-    'Para viajar desde España a EE. UU. necesitará pasaporte electrónico en vigor y autorización ESTA aprobada con antelación (web oficial del gobierno de EE. UU.), además de seguro médico de viaje muy recomendable en EE. UU.',
+    'Pasaporte electrónico en vigor, autorización ESTA oficial en https://esta.cbp.dhs.gov (evitar webs intermediarias que cobran de más) y seguro médico de viaje con buena cobertura en EE. UU.',
   cashForJazz:
-    'Llevar billetes pequeños en dólares ($1, $5, $10) para cubrir entradas rápidas en Frenchmen Street y dejar propinas a las bandas.',
+    'Llevar algo de efectivo en dólares en billetes pequeños ($1, $5, $10) para entradas rápidas en Frenchmen Street y propinas a las bandas.',
   weatherAndPacking:
     'Tiempo en febrero: días suaves (18–21 °C) y noches frescas (9–12 °C) con humedad y chaparrones pasajeros. Vestirse por capas ("estilo cebolla"), cortavientos impermeable ligero, calzado cerrado muy cómodo con buena suela (aceras de adoquines irregulares en el Barrio Francés), paraguas plegable y gafas de sol.',
   paradeComfort:
     'Si coincide con desfiles de Mardi Gras, evitar aglomeraciones de pie en Canal St.: es mucho más cómodo comprar un pase de grada con asiento y baños privados (Grandstand Tickets en St. Charles Ave, p. ej. Lafayette Square o Gallier Hall) o pasear de día por Royal St. y Jackson Square.',
+  moneyAndConnectivity:
+    'Avisar a tu banco en España antes de viajar para que no bloqueen la tarjeta en EE. UU., llevar una segunda tarjeta por si acaso, adaptador de enchufe tipo A/B (EE. UU., 110V) y valorar una eSIM o tarifa roaming para llevar Google Maps y este WhatsApp operativos al aterrizar.',
+  bookingSafety:
+    'Al reservar el hotel, conviene elegir tarifa con cancelación gratuita hasta cerrar los vuelos; y en el vuelo largo, comprobar si la tarifa incluye maleta facturada y reservar asiento de pasillo.',
 };

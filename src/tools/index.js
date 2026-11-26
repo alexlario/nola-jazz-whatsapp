@@ -27,7 +27,7 @@ export const TOOL_SPECS = [
   {
     name: 'analyze_zaragoza_routes',
     description:
-      'Búsqueda avanzada en tiempo real de vuelos desde Zaragoza (AVE a Madrid/Barcelona + vuelo MAD/BCN->MSY con 1 escala) frente a ZAZ. Analiza horarios diurnos, duración de escalas, si pasa inmigración en EE. UU. o directo en MSY (vía Londres), calcula comfortScore para 74 años y puede comparar dos pares de fechas a la vez.',
+      'Búsqueda avanzada en tiempo real de vuelos desde Zaragoza (AVE a Madrid/Barcelona + vuelo MAD/BCN->MSY con 1 escala) frente a ZAZ. Analiza horarios diurnos, duración de escalas, si pasa inmigración en EE. UU. o directo en MSY (vía Londres), calcula comfortScore por comodidad/precio y puede comparar dos pares de fechas a la vez.',
     parameters: {
       type: 'object',
       properties: {
@@ -58,7 +58,7 @@ export const TOOL_SPECS = [
   {
     name: 'recommend_hotels',
     description:
-      'Búsqueda avanzada de hoteles en Nueva Orleans en tiempo real (Google Hotels) filtrada por zona (CBD, Marigny/Frenchmen, French Quarter tranquilo), valoración mínima y precio máximo en euros, comparando impacto de Mardi Gras y añadiendo ejemplos cómodos para 74 años + enlaces de reserva.',
+      'Búsqueda avanzada de hoteles en Nueva Orleans en tiempo real (Google Hotels) filtrada por zona (CBD, Marigny/Frenchmen, French Quarter tranquilo), valoración mínima y precio máximo en euros, comparando impacto de Mardi Gras y añadiendo ejemplos cómodos + enlaces de reserva.',
     parameters: {
       type: 'object',
       properties: {
@@ -89,7 +89,7 @@ export const TOOL_SPECS = [
   {
     name: 'plan_jazz_itinerary',
     description:
-      'Genera un plan cómodo y sentado de jazz tradicional en Nueva Orleans (Snug Harbor, Preservation Hall Big Shot, Spotted Cat de tarde, The Maison, crucero Steamboat Natchez) con reservas clave, clima de febrero y consejos para 74 años.',
+      'Genera un plan cómodo y sentado de jazz tradicional en Nueva Orleans (Snug Harbor, Preservation Hall con butaca reservada, Spotted Cat de tarde, The Maison, crucero Steamboat Natchez) con reservas clave, clima de febrero y consejos prácticos.',
     parameters: {
       type: 'object',
       properties: {
@@ -125,17 +125,74 @@ export const TOOL_SPECS = [
     },
     handler: async (args) => searchLiveNolaJazz(args),
   },
+  {
+    name: 'save_traveler_preferences',
+    description:
+      'Guarda en el cuaderno del viaje cualquier preferencia, decisión o dato que comparta Antonio (fechas elegidas, presupuesto, si viaja solo o acompañado, salida preferida, hotel/vuelo elegido o notas personales) para recordarlo durante toda la planificación.',
+    parameters: {
+      type: 'object',
+      properties: {
+        selectedWindow: {
+          type: 'string',
+          description: 'Ventana elegida: mardi-gras-week, early-feb, post-mardi-gras o hybrid-early.',
+        },
+        outboundDate: {
+          type: 'string',
+          description: 'Fecha de ida YYYY-MM-DD si la ha decidido.',
+        },
+        returnDate: {
+          type: 'string',
+          description: 'Fecha de regreso YYYY-MM-DD si la ha decidido.',
+        },
+        preferredOrigin: {
+          type: 'string',
+          description: 'Origen preferido: MAD, BCN o ZAZ.',
+        },
+        travelers: {
+          type: 'string',
+          description: 'Ej. "1 adulto", "2 adultos".',
+        },
+        hotelZone: {
+          type: 'string',
+          description: 'Zona preferida: cbd, marigny o french-quarter.',
+        },
+        maxHotelPerNightEur: {
+          type: 'number',
+          description: 'Tope aproximado de hotel por noche en euros.',
+        },
+        chosenFlight: {
+          type: 'string',
+          description: 'Resumen del vuelo preferido o cerrado.',
+        },
+        chosenHotel: {
+          type: 'string',
+          description: 'Nombre del hotel preferido o reservado.',
+        },
+        note: {
+          type: 'string',
+          description: 'Cualquier preferencia o comentario personal de Antonio que convenga recordar (ritmo tranquilo, pasillo, comida, etc.).',
+        },
+      },
+    },
+    handler: async (args, context) => {
+      if (!context?.sessionStore || !context?.sessionId) {
+        return { saved: false, reason: 'Sin almacenamiento de sesión activo' };
+      }
+      const updated = await context.sessionStore.updatePreferences(context.sessionId, args);
+      return { saved: true, travelNotebook: updated };
+    },
+  },
 ];
 
 const TOOL_MAP = new Map(TOOL_SPECS.map((t) => [t.name, t]));
 
-export async function executeTool(name, args = {}) {
+export async function executeTool(name, args = {}, context = {}) {
   const tool = TOOL_MAP.get(name);
   if (!tool) {
     return { error: `Herramienta desconocida: ${name}` };
   }
   try {
-    return await tool.handler(args || {});
+    return await tool.handler(args || {}, context);
   } catch (err) {
     return { error: `Error ejecutando ${name}: ${err.message}` };
   }

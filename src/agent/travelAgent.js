@@ -77,7 +77,8 @@ export class TravelAgent {
     }
   }
 
-  async runWithGemini(history, userText) {
+  async runWithGemini(sessionId, session, userText) {
+    const history = session.history || [];
     const contents = [
       ...history.map((msg) => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
@@ -92,7 +93,7 @@ export class TravelAgent {
       parametersJsonSchema: tool.parameters,
     }));
 
-    const systemInstruction = buildSystemPrompt();
+    const systemInstruction = buildSystemPrompt(session.preferences);
     const calledTools = [];
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
@@ -116,7 +117,10 @@ export class TravelAgent {
       const responseParts = [];
       for (const call of calls) {
         calledTools.push(call.name);
-        const result = await executeTool(call.name, call.args || {});
+        const result = await executeTool(call.name, call.args || {}, {
+          sessionStore: this.sessionStore,
+          sessionId,
+        });
         responseParts.push({
           functionResponse: {
             ...(call.id ? { id: call.id } : {}),
@@ -136,9 +140,10 @@ export class TravelAgent {
     return finalResponse.text || '';
   }
 
-  async runWithOpenAI(history, userText) {
+  async runWithOpenAI(sessionId, session, userText) {
+    const history = session.history || [];
     const messages = [
-      { role: 'system', content: buildSystemPrompt() },
+      { role: 'system', content: buildSystemPrompt(session.preferences) },
       ...history.map((m) => ({ role: m.role, content: m.text })),
       { role: 'user', content: userText },
     ];
@@ -186,7 +191,10 @@ export class TravelAgent {
         } catch {
           parsedArgs = {};
         }
-        const toolResult = await executeTool(tc.function?.name, parsedArgs);
+        const toolResult = await executeTool(tc.function?.name, parsedArgs, {
+          sessionStore: this.sessionStore,
+          sessionId,
+        });
         messages.push({
           role: 'tool',
           tool_call_id: tc.id,
@@ -202,7 +210,7 @@ export class TravelAgent {
     const userText = String(rawUserText || '').trim();
     if (!userText) {
       return {
-        text: 'Escribe tu duda sobre fechas, vuelos desde Zaragoza, hoteles o clubes de jazz en Nueva Orleans y te ayudo encantado.',
+        text: 'Hola Antonio, escríbeme tu duda sobre fechas, vuelos desde Zaragoza, hoteles o clubes de jazz en Nueva Orleans y lo vemos juntos.',
         mode: 'empty',
       };
     }
@@ -216,7 +224,7 @@ export class TravelAgent {
     if (this.geminiClient) {
       try {
         diagnostics.lastGeminiModelTried = this.activeGeminiModel;
-        replyText = await this.runWithGemini(session.history, userText);
+        replyText = await this.runWithGemini(sessionId, session, userText);
         mode = 'gemini';
         diagnostics.lastGeminiMode = 'gemini';
         diagnostics.lastGeminiError = null;
@@ -229,7 +237,7 @@ export class TravelAgent {
       }
     } else if (config.ai.openaiApiKey) {
       try {
-        replyText = await this.runWithOpenAI(session.history, userText);
+        replyText = await this.runWithOpenAI(sessionId, session, userText);
         mode = 'openai';
       } catch (err) {
         console.error('[TravelAgent] Error con OpenAI, usando motor local de respaldo:', err.message);

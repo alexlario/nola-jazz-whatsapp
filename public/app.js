@@ -136,12 +136,12 @@ resetBtn.addEventListener('click', async () => {
   chatMessages.replaceChildren();
   appendBubble(
     'assistant',
-    '¡Hola! Soy el asistente del viaje de Zaragoza a Nueva Orleans (febrero 2027) para disfrutar del mejor jazz. Pulsa un botón de abajo o pregúntame por fechas, vuelos o hoteles.',
+    '¡Hola Antonio! Soy tu compañero de viaje para organizar tu escapada de *Zaragoza a Nueva Orleans en febrero de 2027* y disfrutar del mejor jazz. Pulsa un botón de abajo o cuéntame qué tienes en mente.',
   );
 });
 
 void loadHealth();
 appendBubble(
   'assistant',
-  '¡Hola! Estoy listo para ayudar a tu padre a planificar su viaje de *Zaragoza a Nueva Orleans en febrero 2027* (fechas, AVE + vuelos con 1 escala, hoteles y clubes de jazz tradicional). Prueba cualquiera de los botones rápidos de abajo.',
+  '¡Hola Antonio! Estoy aquí para acompañarte paso a paso en tu viaje de *Zaragoza a Nueva Orleans en febrero de 2027* (fechas, AVE + vuelos, hoteles y el mejor jazz). Cuéntame qué idea llevas o prueba cualquiera de los botones rápidos.',
 );
