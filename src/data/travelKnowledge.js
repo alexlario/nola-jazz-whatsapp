@@ -62,6 +62,29 @@ export const FEBRUARY_2027_CARNIVAL = {
         'Requiere adelantar la salida un par de días respecto al 1 de febrero.',
       ],
     },
+    {
+      id: 'mardi-gras-week',
+      label: 'Semana grande de Carnaval (4–11 de febrero de 2027, 7 noches)',
+      suggestedDates: { outbound: '2027-02-04', returnDate: '2027-02-11', nights: 7 },
+      hotelPriceLevel: 'Temporada alta de Carnaval (~340–400 €/noche en hoteles céntricos tranquilos)',
+      crowdLevel: 'Máximo ambiente de Mardi Gras; ideal usar gradas con asiento',
+      jazzAccess: 'Muy bueno en salas sentadas con reserva (Snug Harbor, Preservation Hall con asiento Big Shot, Steamboat Natchez) o Frenchmen St. de tarde.',
+      parades: [
+        'Jue 4 feb: Chaos, Babylon y Muses.',
+        'Vie 5 feb: Bosom Buddies, Hermes, d’Etat y Morpheus.',
+        'Sáb 6 feb: Iris, Tucks y Endymion.',
+        'Dom 7 feb: Okeanos, Mid-City, Thoth y Bacchus (~17:15, gran desfile nocturno).',
+        'Lun 8 feb (Lundi Gras): Proteus (~17:15) y Orpheus (~18:00).',
+        'Mar 9 feb (Mardi Gras Day): Zulu (08:00) y Rex (~10:00).',
+      ],
+      pros: [
+        'Permite vivir los días grandes de Mardi Gras sin perderse el jazz sentado.',
+        'Consejo de comodidad (74 años): comprar pase de grada con asiento y baños privados (Grandstand Tickets en St. Charles Ave, p. ej. Lafayette Square o Gallier Hall) en lugar de esperar de pie en Canal Street.',
+      ],
+      cons: [
+        'Tarifas hoteleras más altas del año; si prefiere ahorrar ~30–40% y más calma, es mejor viajar del 10–17 feb.',
+      ],
+    },
   ],
 };
 
@@ -87,7 +110,7 @@ export const ZARAGOZA_ROUTES = [
       protection: 'Billete único MAD–MSY: si se retrasa el primer vuelo, la aerolínea te reubica gratis.',
     },
     layoverAdvice:
-      'Para ir cómodo y sin sustos: priorizar escala única en Londres (LHR) o hub de EE. UU. con al menos 2h30 de margen si se pasa inmigración estadounidense en la escala (ATL, MIA, DFW, EWR).',
+      'Para un viajero de 74 años, la escala en Londres-Heathrow (LHR con British Airways/Iberia) tiene una gran ventaja: haces inmigración de EE. UU. al llegar a Nueva Orleans (MSY, aeropuerto pequeño y cómodo) en lugar de hacerla en medio de una escala en EE. UU. Además conviene elegir asiento de pasillo en el tramo largo y pedir asistencia gratuita en aeropuerto si desea evitar caminatas largas.',
   },
   {
     id: 'ave-bcn',
@@ -160,7 +183,28 @@ export const HOTEL_ZONES = [
     walkToJazz: 'Pasos de Preservation Hall, Fritzel’s y Mahogany Jazz Hall; 10–15 min a pie a Frenchmen St.',
     noiseLevel: 'Muy variable: tranquilo cerca de Royal/Esplanade, muy ruidoso junto a Bourbon St.',
     bestFor: 'Comodidad absoluta para pasear de día por arquitectura criolla y escuchar jazz clásico por la noche.',
-    tips: 'Si elige French Quarter, evitar calles pegadas a Bourbon St. (mejor zona alta hacia Esplanade Ave o Royal/Chartres tranquila).',
+    tips: 'Si elige French Quarter, evitar calles pegadas a Bourbon St. (mejor zona baja/tranquila hacia Esplanade/Decatur o Royal/Canal junto al tranvía).',
+  },
+];
+
+export const SENIOR_FRIENDLY_HOTELS = [
+  {
+    name: 'Le Richelieu Hotel',
+    area: 'French Quarter (zona baja y tranquila)',
+    highlights: 'Hotel histórico de 3 estrellas en una calle muy apacible; paseo llano de 5–10 minutos tanto a Jackson Square como a los clubes de jazz de Frenchmen Street.',
+    url: 'https://www.lerichelieuhotelnola.com/',
+  },
+  {
+    name: 'Wyndham New Orleans - French Quarter',
+    area: 'Royal St / Canal St (French Quarter)',
+    highlights: '4 estrellas junto a los tranvías históricos de Canal Street y St. Charles Avenue; cómodo para ver pasar desfiles cerca y subir enseguida a descansar.',
+    url: 'https://www.wyndhamhotels.com/wyndham/new-orleans-louisiana/wyndham-new-orleans-french-quarter/overview',
+  },
+  {
+    name: 'Holiday Inn French Quarter-Chateau LeMoyne',
+    area: 'Dauphine St (French Quarter)',
+    highlights: 'Edificio histórico con patio interior muy agradable y buen acceso peatonal llano a todo el centro.',
+    url: 'https://www.ihg.com/holidayinn/hotels/us/en/new-orleans/msycl/hoteldetail',
   },
 ];
 
@@ -170,8 +214,8 @@ export const JAZZ_VENUES = [
     area: 'French Quarter',
     address: '726 St. Peter St.',
     style: 'Jazz tradicional de Nueva Orleans puro y sin amplificación',
-    schedule: 'Varios pases cada noche (sesiones cortas e intensas)',
-    entry: 'Imprescindible reservar entrada online con antelación (muy pocas entradas en cola del día). Sin bar ni lujos: bancos de madera y pura historia.',
+    schedule: 'Varios pases cada noche (sesiones cortas de ~45 min)',
+    entry: 'CLAVE A LOS 74 AÑOS: reservar online con antelación las entradas con asiento reservado (Big Shot o fila delantera), porque la entrada general es de pie y requiere hacer cola en la calle.',
     idealForDad: true,
     url: 'https://www.preservationhall.com/',
   },
@@ -179,9 +223,9 @@ export const JAZZ_VENUES = [
     name: 'Snug Harbor Jazz Bistro',
     area: 'Frenchmen Street (Marigny)',
     address: '626 Frenchmen St.',
-    style: 'Jazz acústico, straight-ahead y leyendas locales en sala sentada',
+    style: 'Jazz acústico, straight-ahead y leyendas locales en sala con butacas numeradas',
     schedule: '7 días a la semana; pases habituales a las 19:30 y 21:30',
-    entry: 'Conviene reservar entrada online para la sala trasera. Restaurante criollo delante para cenar cómodo antes o después.',
+    entry: 'La opción más cómoda para ir sentado sin agobios: comprar entrada anticipada en su web y cenar en su restaurante criollo delantero.',
     idealForDad: true,
     url: 'https://snugjazz.com/',
   },
@@ -191,7 +235,7 @@ export const JAZZ_VENUES = [
     address: '623 Frenchmen St.',
     style: 'Jazz tradicional, swing clásico, brass y blues muy vivo',
     schedule: 'Todos los días desde ~14:00 hasta madrugada',
-    entry: 'Sin reservas; entrada por orden de llegada con pequeño cover en efectivo (y consumición/propina en efectivo recomendada).',
+    entry: 'Truco de comodidad: ir entre las 15:00 y las 18:30 h, cuando hay mucho menos gentío y es fácil sentarse en la barra o mesas laterales antes de que se llene por la noche. Llevar efectivo.',
     idealForDad: true,
     url: 'https://www.spottedcatmusicclub.com/',
   },
@@ -255,6 +299,16 @@ export const JAZZ_VENUES = [
     idealForDad: true,
     url: 'https://www.wwoz.org/calendar/livewire-music',
   },
+  {
+    name: 'Crucero en barco de vapor Steamboat Natchez',
+    area: 'Toulouse Street Wharf (Río Misisipi / French Quarter)',
+    address: '400 Toulouse St.',
+    style: 'Crucero diurno de ~2 horas por el río Misisipi con banda de jazz tradicional en directo y almuerzo opcional',
+    schedule: 'Salidas diarias diurnas y nocturnas (nota: en mantenimiento invernal ocasionalmente opera su barco hermano Riverboat City of New Orleans)',
+    entry: 'Actividad muy relajada y sentada sin apenas caminar; ideal para disfrutar del jazz de día con vistas al río.',
+    idealForDad: true,
+    url: 'https://www.steamboatnatchez.com/',
+  },
 ];
 
 export const PRACTICAL_TIPS = {
@@ -267,4 +321,8 @@ export const PRACTICAL_TIPS = {
     'Para viajar desde España a EE. UU. necesitará pasaporte electrónico en vigor y autorización ESTA aprobada con antelación (web oficial del gobierno de EE. UU.), además de seguro médico de viaje muy recomendable en EE. UU.',
   cashForJazz:
     'Llevar billetes pequeños en dólares ($1, $5, $10) para cubrir entradas rápidas en Frenchmen Street y dejar propinas a las bandas.',
+  weatherAndPacking:
+    'Tiempo en febrero: días suaves (18–21 °C) y noches frescas (9–12 °C) con humedad y chaparrones pasajeros. Vestirse por capas ("estilo cebolla"), cortavientos impermeable ligero, calzado cerrado muy cómodo con buena suela (aceras de adoquines irregulares en el Barrio Francés), paraguas plegable y gafas de sol.',
+  paradeComfort:
+    'Si coincide con desfiles de Mardi Gras, evitar aglomeraciones de pie en Canal St.: es mucho más cómodo comprar un pase de grada con asiento y baños privados (Grandstand Tickets en St. Charles Ave, p. ej. Lafayette Square o Gallier Hall) o pasear de día por Royal St. y Jackson Square.',
 };

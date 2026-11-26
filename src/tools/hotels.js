@@ -1,5 +1,5 @@
 import { config } from '../config.js';
-import { HOTEL_ZONES } from '../data/travelKnowledge.js';
+import { HOTEL_ZONES, SENIOR_FRIENDLY_HOTELS } from '../data/travelKnowledge.js';
 
 function isValidIsoDate(value) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
@@ -110,6 +110,7 @@ export async function recommendHotels({
         ? ['marigny', 'cbd', 'french-quarter']
         : ['cbd', 'marigny', 'french-quarter'],
     zones: HOTEL_ZONES,
+    seniorFriendlyExamples: SENIOR_FRIENDLY_HOTELS,
     bookingLinks: {
       general: buildHotelLinks({ checkInDate: safeIn, checkOutDate: safeOut, zone: 'cbd' }),
       marigny: buildHotelLinks({ checkInDate: safeIn, checkOutDate: safeOut, zone: 'marigny' }),

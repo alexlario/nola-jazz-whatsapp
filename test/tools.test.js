@@ -7,14 +7,16 @@ import { recommendHotels, buildHotelLinks } from '../src/tools/hotels.js';
 import { planJazzItinerary } from '../src/tools/jazz.js';
 import { formatForWhatsApp, splitWhatsAppMessage } from '../src/utils/whatsappFormat.js';
 
-test('compareFebruaryWindows identifies Mardi Gras 2027 on Feb 9 and compares 3 windows', () => {
+test('compareFebruaryWindows identifies Mardi Gras 2027 on Feb 9 and compares all windows', () => {
   const res = compareFebruaryWindows({ preferredDays: 6 });
   assert.equal(res.mardiGrasFatTuesday, '2027-02-09');
   assert.equal(res.ashWednesday, '2027-02-10');
-  assert.equal(res.windows.length, 3);
+  assert.equal(res.windows.length, 4);
   const early = res.windows.find((w) => w.id === 'early-feb');
   assert.ok(early.parades.some((p) => p.includes('Muses')));
   assert.ok(early.parades.some((p) => p.includes('Endymion')));
+  const carnivalWeek = res.windows.find((w) => w.id === 'mardi-gras-week');
+  assert.ok(carnivalWeek.parades.some((p) => p.includes('Zulu')));
 });
 
 test('analyzeZaragozaRoutes recommends AVE+MAD/BCN over ZAZ and builds valid deep links', async () => {

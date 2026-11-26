@@ -6,19 +6,19 @@ export function planJazzItinerary({ nights = 5, style = 'traditional' } = {}) {
   const sampleEvenings = [
     {
       evening: 'Noche 1 (Aterrizaje suave en el French Quarter)',
-      plan: 'Paseo tranquilo por Royal St. y Jackson Square + pase temprano en Preservation Hall (reservar entrada online antes del viaje) o copa tranquila escuchando Dixieland en Fritzel’s European Jazz Pub (733 Bourbon St.).',
+      plan: 'Paseo tranquilo y llano por Royal St. y Jackson Square + pase temprano en Preservation Hall (reservar entrada con asiento Big Shot/fila delantera) o taberna tranquila en Fritzel’s European Jazz Pub (733 Bourbon St.).',
     },
     {
-      evening: 'Noche 2 (Inmersión total en Frenchmen Street)',
-      plan: 'Cenar cómodo en el restaurante de Snug Harbor (626 Frenchmen St.) y entrar al pase de las 19:30 o 21:30 en su sala de conciertos (reservar antes). Después, asomarse a The Spotted Cat (623 Frenchmen St.) para escuchar swing/jazz tradicional de cerca.',
+      evening: 'Noche 2 (Inmersión cómoda en Frenchmen Street)',
+      plan: 'Tarde tranquila en The Spotted Cat (15:00–18:30, fácil sentarse sin multitudes), cena en Snug Harbor (626 Frenchmen St.) y pase sentado con butaca numerada a las 19:30 o 21:30 (reservar antes).',
     },
     {
-      evening: 'Noche 3 (Tarde de música continua + cena acústica)',
-      plan: 'Empezar a media tarde escuchando jazz tradicional gratis en Bamboula’s (514/516 Frenchmen St.) o The Maison (508 Frenchmen St.). Cenar en Three Muses (536 Frenchmen St., ~$3 de música en directo en cuenta) y rematar en d.b.a. (618 Frenchmen St.).',
+      evening: 'Noche 3 (Barco de vapor + cena acústica)',
+      plan: 'Crucero diurno sentado de 2 h en el Steamboat Natchez con jazz en directo por el Misisipi, descanso por la tarde y cena con música en The Maison (508 Frenchmen St.) o Three Muses (536 Frenchmen St.).',
     },
     {
-      evening: 'Noche 4 (Día clásico de río, barrio y club favorito)',
-      plan: 'Mañana por Garden District (tranvía St. Charles) o Garden/French Market, descanso a mediodía y repetir el local que más le haya gustado de Frenchmen St. o probar Mahogany Jazz Hall (125 Chartres St.).',
+      evening: 'Noche 4 (Tranvía clásico y club favorito)',
+      plan: 'Mañana en el tranvía histórico de St. Charles Ave (Garden District), tarde relajada en Bamboula’s (514/516 Frenchmen St.) o Mahogany Jazz Hall (125 Chartres St.).',
     },
   ];
 
@@ -26,8 +26,9 @@ export function planJazzItinerary({ nights = 5, style = 'traditional' } = {}) {
     nightsPlanned: safeNights,
     styleFocus: style,
     mustBookBeforeTravel: [
-      'Preservation Hall (726 St. Peter St.) — reservar entradas online con semanas de antelación.',
-      'Snug Harbor Jazz Bistro (626 Frenchmen St.) — reservar butacas del pase de 19:30 o 21:30 si quieres garantía de asiento cómodo.',
+      'Preservation Hall (726 St. Peter St.) — reservar online entradas con asiento reservado (Big Shot o fila delantera) para evitar colas de pie.',
+      'Snug Harbor Jazz Bistro (626 Frenchmen St.) — reservar butacas numeradas del pase de 19:30 o 21:30.',
+      'Crucero Steamboat Natchez — reservar pase diurno con jazz en directo y almuerzo opcional.',
     ],
     venues: JAZZ_VENUES,
     suggestedEvenings: sampleEvenings.slice(0, Math.min(sampleEvenings.length, safeNights)),
