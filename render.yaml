@@ -7,6 +7,8 @@ services:
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
+      - key: NODE_VERSION
+        value: 24.14.1
       - key: NODE_ENV
         value: production
       - key: STRICT_WEBHOOK_SIGNATURE

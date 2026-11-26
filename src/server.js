@@ -232,7 +232,7 @@ const isMainModule =
 
 if (isMainModule) {
   const app = createApp();
-  app.listen(config.port, () => {
+  app.listen(config.port, '0.0.0.0', () => {
     const status = getPublicStatus();
     console.log(`\n🎷 NOLA Jazz WhatsApp Concierge listo en http://localhost:${config.port}`);
     console.log(`   • Motor IA: ${status.aiProvider}`);
