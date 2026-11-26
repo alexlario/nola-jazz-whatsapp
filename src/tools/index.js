@@ -108,17 +108,17 @@ export const TOOL_SPECS = [
   {
     name: 'search_live_nola_jazz',
     description:
-      'Busca en vivo en Google/WWOZ información actualizada sobre programación de bandas de jazz en Nueva Orleans, entradas de Preservation Hall/Snug Harbor/Steamboat Natchez, gradas de Mardi Gras (Grandstand Tickets) o restaurantes criollos tranquilos.',
+      'Búsqueda web en vivo en Google (SerpApi) para consultar cualquier dato actualizado online: conciertos/bandas en WWOZ, entradas de Preservation Hall/Snug Harbor/Steamboat Natchez, gradas de Mardi Gras, reseñas de hoteles, restaurantes criollos tranquilos o trenes AVE Zaragoza–Madrid/Barcelona.',
     parameters: {
       type: 'object',
       properties: {
         query: {
           type: 'string',
-          description: 'Consulta concreta en español o inglés (ej. "Snug Harbor calendar February", "Steamboat Natchez lunch jazz cruise tickets", "Mardi Gras grandstand tickets St Charles").',
+          description: 'Consulta concreta para buscar en vivo en Google.',
         },
         focus: {
           type: 'string',
-          description: 'wwoz_schedule, parades_tickets o jazz_venues.',
+          description: 'wwoz_schedule, parades_tickets, jazz_venues, trains_ave o general_nola.',
         },
       },
       required: ['query'],

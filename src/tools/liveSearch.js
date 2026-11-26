@@ -15,7 +15,11 @@ export async function searchLiveNolaJazz({
       ? `site:wwoz.org ${cleanQuery}`
       : focus === 'parades_tickets'
         ? `New Orleans Mardi Gras 2027 ${cleanQuery}`
-        : `New Orleans ${cleanQuery}`;
+        : focus === 'trains_ave'
+          ? cleanQuery
+          : /new orleans|nueva orleans|frenchmen|snug harbor|preservation hall|natchez/i.test(cleanQuery)
+            ? cleanQuery
+            : `New Orleans ${cleanQuery}`;
 
   if (!config.serpApiKey) {
     return {
@@ -30,11 +34,12 @@ export async function searchLiveNolaJazz({
     };
   }
 
+  const isSpanishRail = focus === 'trains_ave';
   const params = new URLSearchParams({
     engine: 'google',
     q: enrichedQuery,
-    hl: 'en',
-    gl: 'us',
+    hl: isSpanishRail ? 'es' : 'en',
+    gl: isSpanishRail ? 'es' : 'us',
     num: '6',
     api_key: config.serpApiKey,
   });

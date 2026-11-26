@@ -94,13 +94,32 @@ async function formatHotelsReply(dates) {
     '• *Le Richelieu Hotel* (zona baja tranquila, paseo llano 5–10 min a Frenchmen St. y Jackson Sq.), *Wyndham French Quarter* (Royal/Canal junto al tranvía) o *Holiday Inn Chateau LeMoyne* (patio tranquilo).',
     '• Orientativo: *$190–$320/noche* fuera de Carnaval (~340–400 €/noche del 4 al 11 feb).',
     '',
+  ];
+
+  const liveProps = [
+    ...(data.liveSearch?.cbdValue?.properties || []),
+    ...(data.liveSearch?.frenchQuarter?.properties || []),
+    ...(data.liveSearch?.properties || []),
+  ].slice(0, 4);
+
+  if (liveProps.length > 0) {
+    lines.push('*🔎 Hoteles reales encontrados ahora (Google Hotels):*');
+    for (const h of liveProps) {
+      const priceStr = h.ratePerNightEur ? `${h.ratePerNightEur} €/noche` : 'Consultar';
+      const ratingStr = h.rating ? `${h.rating}★` : '';
+      lines.push(`• *${h.name}* ${ratingStr ? `(${ratingStr})` : ''} — ${priceStr}${h.link ? ` | ${h.link}` : ''}`);
+    }
+    lines.push('');
+  }
+
+  lines.push(
     '*🔗 Enlaces con tus fechas ya puestas:*',
     `• Booking (orden calidad/precio): ${data.bookingLinks.general.booking}`,
     `• Google Hotels (CBD): ${data.bookingLinks.general.googleHotels}`,
     `• Google Hotels (Marigny/Jazz): ${data.bookingLinks.marigny.googleHotels}`,
     '',
     '¿Quieres que te arme ahora la *ruta de clubes de jazz tradicional* y consejos de aeropuerto? Responde *jazz*.',
-  ];
+  );
 
   return lines.join('\n');
 }
