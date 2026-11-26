@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { z } from 'zod';
 import { config, getPublicStatus } from './config.js';
+import { diagnostics, sanitizeMessage } from './diagnostics.js';
 import { TravelAgent } from './agent/travelAgent.js';
 import { createRateLimiter } from './middleware/rateLimit.js';
 import {
@@ -114,10 +115,12 @@ export function createApp({ travelAgent = new TravelAgent() } = {}) {
     }
 
     const incoming = extractMetaIncomingMessages(req.body);
+    diagnostics.lastMetaIncomingAt = new Date().toISOString();
     console.log(`[Meta] Webhook POST recibido (${incoming.length} mensaje(s))`);
     res.status(200).send('EVENT_RECEIVED');
 
     for (const msg of incoming) {
+      diagnostics.lastMetaIncomingType = msg.type;
       if (msg.id) {
         if (processedMessageIds.has(msg.id)) continue;
         processedMessageIds.add(msg.id);
@@ -128,11 +131,13 @@ export function createApp({ travelAgent = new TravelAgent() } = {}) {
       }
 
       if (!isPhoneAllowed(msg.from)) {
+        diagnostics.lastMetaSendStatus = 'blocked_whitelist';
         console.warn(`[Meta] Mensaje bloqueado de número no autorizado: ${msg.from}`);
         continue;
       }
 
       if (!checkRateLimit(`wa:${msg.from}`).allowed) {
+        diagnostics.lastMetaSendStatus = 'rate_limited';
         console.warn(`[Meta] Límite de peticiones alcanzado para ${msg.from}`);
         continue;
       }
@@ -148,10 +153,14 @@ export function createApp({ travelAgent = new TravelAgent() } = {}) {
             return;
           }
 
+          console.log('[Meta] Generando respuesta...');
           const { text, mode } = await travelAgent.reply(`wa:${msg.from}`, msg.text);
+          console.log(`[Meta] Enviando respuesta (${mode}, ${text.length} chars)...`);
           await sendMetaWhatsAppText(msg.from, text);
-          console.log(`[Meta] Respuesta enviada (${mode}) a ${msg.from}`);
+          console.log(`[Meta] Respuesta enviada (${mode}) ok`);
         } catch (err) {
+          diagnostics.lastMetaSendStatus = 'error';
+          diagnostics.lastMetaSendError = sanitizeMessage(err);
           console.error('[Meta] Error respondiendo mensaje:', err.message);
         }
       })();

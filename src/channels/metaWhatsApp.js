@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { config } from '../config.js';
+import { diagnostics, sanitizeMessage } from '../diagnostics.js';
 import { splitWhatsAppMessage } from '../utils/whatsappFormat.js';
 
 export function verifyMetaWebhookChallenge(req, res) {
@@ -92,20 +93,27 @@ async function callMetaGraph(pathSuffix, body) {
   }
 
   const url = `https://graph.facebook.com/${config.meta.graphVersion}/${config.meta.phoneNumberId}/${pathSuffix}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${config.meta.token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${config.meta.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
 
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Meta Graph API error ${res.status}: ${errText.slice(0, 300)}`);
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Meta Graph API error ${res.status}: ${errText.slice(0, 300)}`);
+    }
+    return res.json();
+  } finally {
+    clearTimeout(timeout);
   }
-  return res.json();
 }
 
 export async function markMetaMessageAsRead(messageId) {
@@ -116,7 +124,9 @@ export async function markMetaMessageAsRead(messageId) {
       status: 'read',
       message_id: messageId,
     });
+    diagnostics.lastMetaReadStatus = 'ok';
   } catch (err) {
+    diagnostics.lastMetaReadStatus = sanitizeMessage(err);
     console.warn('[Meta] No se pudo marcar como leído:', err.message);
   }
 }
@@ -137,6 +147,8 @@ export async function sendMetaWhatsAppText(to, text) {
     });
     results.push(result);
   }
+  diagnostics.lastMetaSendStatus = 'ok';
+  diagnostics.lastMetaSendError = null;
   return results;
 }
 

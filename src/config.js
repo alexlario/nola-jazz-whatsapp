@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { diagnostics } from './diagnostics.js';
 
 dotenv.config();
 
@@ -59,5 +60,6 @@ export function getPublicStatus() {
     twilioConfigured: Boolean(config.twilio.accountSid && config.twilio.authToken),
     strictWebhookSignature: config.security.strictWebhookSignature,
     whitelistCount: config.security.allowedPhoneNumbers.length,
+    diagnostics,
   };
 }

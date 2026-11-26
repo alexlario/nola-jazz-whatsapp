@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { config } from '../config.js';
+import { diagnostics, sanitizeMessage } from '../diagnostics.js';
 import { SessionStore } from '../storage/sessionStore.js';
 import { TOOL_SPECS, executeTool } from '../tools/index.js';
 import { formatForWhatsApp } from '../utils/whatsappFormat.js';
@@ -19,7 +20,13 @@ export class TravelAgent {
     this.sessionStore = sessionStore;
     this.activeGeminiModel = config.ai.geminiModel || RECOMMENDED_GEMINI_MODEL;
     this.geminiClient = config.ai.geminiApiKey
-      ? new GoogleGenAI({ apiKey: config.ai.geminiApiKey })
+      ? new GoogleGenAI({
+          apiKey: config.ai.geminiApiKey,
+          httpOptions: {
+            timeout: 15000,
+            retryOptions: { attempts: 2 },
+          },
+        })
       : null;
   }
 
@@ -177,11 +184,19 @@ export class TravelAgent {
     let mode = 'fallback';
     let preferencesPatch = null;
 
+    const startedAt = Date.now();
     if (this.geminiClient) {
       try {
+        diagnostics.lastGeminiModelTried = this.activeGeminiModel;
         replyText = await this.runWithGemini(session.history, userText);
         mode = 'gemini';
+        diagnostics.lastGeminiMode = 'gemini';
+        diagnostics.lastGeminiError = null;
+        diagnostics.lastGeminiMs = Date.now() - startedAt;
       } catch (err) {
+        diagnostics.lastGeminiMode = 'fallback';
+        diagnostics.lastGeminiError = sanitizeMessage(err);
+        diagnostics.lastGeminiMs = Date.now() - startedAt;
         console.error('[TravelAgent] Error con Gemini, usando motor local de respaldo:', err.message);
       }
     } else if (config.ai.openaiApiKey) {
