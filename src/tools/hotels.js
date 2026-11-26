@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { diagnostics, sanitizeMessage } from '../diagnostics.js';
 import { HOTEL_ZONES, SENIOR_FRIENDLY_HOTELS } from '../data/travelKnowledge.js';
 
 function isValidIsoDate(value) {
@@ -37,10 +38,10 @@ function overlapsCarnivalPeak(checkInDate, checkOutDate) {
 
 function mapMinRatingParam(minRating) {
   const num = Number(minRating);
-  if (!Number.isFinite(num) || num <= 0) return 'AT_LEAST_4_0';
-  if (num >= 4.5) return 'AT_LEAST_4_5';
-  if (num >= 4.0) return 'AT_LEAST_4_0';
-  return 'AT_LEAST_3_5';
+  if (!Number.isFinite(num) || num <= 0) return '8';
+  if (num >= 4.5) return '9';
+  if (num >= 4.0) return '8';
+  return '7';
 }
 
 async function fetchLiveHotelsFromSerpApi({
@@ -61,7 +62,7 @@ async function fetchLiveHotelsFromSerpApi({
     currency: 'EUR',
     hl: 'es',
     gl: 'es',
-    sort_by: '8', // highest rating / best quality first
+    sort_by: '8', // highest rating
     rating: mapMinRatingParam(minRating),
     api_key: config.serpApiKey,
   });
@@ -71,14 +72,18 @@ async function fetchLiveHotelsFromSerpApi({
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 6000);
+  const timeout = setTimeout(() => controller.abort(), 10000);
 
   try {
     const res = await fetch(`https://serpapi.com/search.json?${params.toString()}`, {
       signal: controller.signal,
     });
-    if (!res.ok) return { error: `SerpApi devolvió HTTP ${res.status}` };
-    const json = await res.json();
+    const json = await res.json().catch(() => null);
+    if (!res.ok || json?.error) {
+      const msg = json?.error || `HTTP ${res.status}`;
+      diagnostics.lastSerpApiHotels = { ok: false, query, error: sanitizeMessage(msg) };
+      return { error: `SerpApi: ${msg}` };
+    }
     const props = (json.properties || []).slice(0, 6).map((p) => ({
       name: p.name,
       rating: p.overall_rating ?? null,
@@ -88,13 +93,20 @@ async function fetchLiveHotelsFromSerpApi({
       amenities: Array.isArray(p.amenities) ? p.amenities.slice(0, 5) : [],
       link: p.link || null,
     }));
+    diagnostics.lastSerpApiHotels = {
+      ok: true,
+      query,
+      propertiesCount: props.length,
+    };
     return {
       source: 'Google Hotels en vivo (SerpApi)',
       queryUsed: query,
       properties: props,
     };
   } catch (err) {
-    return { error: err.name === 'AbortError' ? 'Tiempo de espera agotado consultando hoteles' : err.message };
+    const msg = err.name === 'AbortError' ? 'Tiempo de espera agotado (10s) consultando hoteles' : err.message;
+    diagnostics.lastSerpApiHotels = { ok: false, query, error: sanitizeMessage(msg) };
+    return { error: msg };
   } finally {
     clearTimeout(timeout);
   }

@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { diagnostics, sanitizeMessage } from '../diagnostics.js';
 
 export async function searchLiveNolaJazz({
   query = 'New Orleans traditional jazz live music WWOZ Preservation Hall Snug Harbor February',
@@ -39,21 +40,25 @@ export async function searchLiveNolaJazz({
   });
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5500);
+  const timeout = setTimeout(() => controller.abort(), 8000);
 
   try {
     const res = await fetch(`https://serpapi.com/search.json?${params.toString()}`, {
       signal: controller.signal,
     });
-    if (!res.ok) {
-      return { error: `SerpApi Search devolvió HTTP ${res.status}` };
+    const json = await res.json().catch(() => null);
+    if (!res.ok || json?.error) {
+      const msg = json?.error || `HTTP ${res.status}`;
+      diagnostics.lastSerpApiJazz = { ok: false, error: sanitizeMessage(msg) };
+      return { error: `SerpApi Search: ${msg}` };
     }
-    const json = await res.json();
     const results = (json.organic_results || []).slice(0, 5).map((item) => ({
       title: item.title || '',
       link: item.link || '',
       snippet: item.snippet || '',
     }));
+
+    diagnostics.lastSerpApiJazz = { ok: true, resultsCount: results.length };
 
     return {
       source: 'Búsqueda web en vivo (SerpApi Google)',
@@ -61,9 +66,9 @@ export async function searchLiveNolaJazz({
       results,
     };
   } catch (err) {
-    return {
-      error: err.name === 'AbortError' ? 'Tiempo de espera agotado buscando lugares/eventos en vivo' : err.message,
-    };
+    const msg = err.name === 'AbortError' ? 'Tiempo de espera agotado buscando lugares/eventos en vivo' : err.message;
+    diagnostics.lastSerpApiJazz = { ok: false, error: sanitizeMessage(msg) };
+    return { error: msg };
   } finally {
     clearTimeout(timeout);
   }

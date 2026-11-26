@@ -93,6 +93,7 @@ export class TravelAgent {
     }));
 
     const systemInstruction = buildSystemPrompt();
+    const calledTools = [];
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
       const response = await this.generateWithGeminiFallback(contents, {
@@ -103,6 +104,7 @@ export class TravelAgent {
 
       const calls = response.functionCalls;
       if (!calls || calls.length === 0) {
+        diagnostics.lastToolsCalled = calledTools;
         return response.text || '';
       }
 
@@ -113,6 +115,7 @@ export class TravelAgent {
 
       const responseParts = [];
       for (const call of calls) {
+        calledTools.push(call.name);
         const result = await executeTool(call.name, call.args || {});
         responseParts.push({
           functionResponse: {
@@ -125,6 +128,7 @@ export class TravelAgent {
       contents.push({ role: 'user', parts: responseParts });
     }
 
+    diagnostics.lastToolsCalled = calledTools;
     const finalResponse = await this.generateWithGeminiFallback(contents, {
       systemInstruction,
       temperature: 0.4,

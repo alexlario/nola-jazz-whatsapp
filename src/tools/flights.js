@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { diagnostics, sanitizeMessage } from '../diagnostics.js';
 import { ZARAGOZA_ROUTES } from '../data/travelKnowledge.js';
 
 const EUROPEAN_HUBS = new Set(['LHR', 'LGW', 'CDG', 'ORY', 'FRA', 'MUC', 'AMS', 'DUB', 'MAD', 'BCN', 'LIS', 'ZRH']);
@@ -101,6 +102,7 @@ async function fetchLiveFlightsFromSerpApi({ origin, destination = 'MSY', outbou
 
   const params = new URLSearchParams({
     engine: 'google_flights',
+    type: '1',
     departure_id: origin,
     arrival_id: destination,
     outbound_date: outboundDate,
@@ -113,28 +115,39 @@ async function fetchLiveFlightsFromSerpApi({ origin, destination = 'MSY', outbou
   });
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 6000);
+  const timeout = setTimeout(() => controller.abort(), 10000);
 
   try {
     const res = await fetch(`https://serpapi.com/search.json?${params.toString()}`, {
       signal: controller.signal,
     });
-    if (!res.ok) {
-      return { error: `SerpApi devolvió HTTP ${res.status}` };
+    const json = await res.json().catch(() => null);
+    if (!res.ok || json?.error) {
+      const msg = json?.error || `HTTP ${res.status}`;
+      diagnostics.lastSerpApiFlights = { ok: false, origin, error: sanitizeMessage(msg) };
+      return { error: `SerpApi: ${msg}` };
     }
-    const json = await res.json();
     const candidates = [...(json.best_flights || []), ...(json.other_flights || [])]
       .slice(0, 8)
       .map(summarizeSerpApiFlightOffer)
       .sort((a, b) => b.comfortScore - a.comfortScore || (a.priceEur ?? 9999) - (b.priceEur ?? 9999))
       .slice(0, 5);
 
+    diagnostics.lastSerpApiFlights = {
+      ok: true,
+      origin,
+      outboundDate,
+      offersCount: candidates.length,
+    };
+
     return {
       source: 'Google Flights en vivo (SerpApi, ordenados por comodidad/precio para 74 años)',
       offers: candidates,
     };
   } catch (err) {
-    return { error: err.name === 'AbortError' ? 'Tiempo de espera agotado consultando vuelos en vivo' : err.message };
+    const msg = err.name === 'AbortError' ? 'Tiempo de espera agotado (10s) consultando vuelos en vivo' : err.message;
+    diagnostics.lastSerpApiFlights = { ok: false, origin, error: sanitizeMessage(msg) };
+    return { error: msg };
   } finally {
     clearTimeout(timeout);
   }
