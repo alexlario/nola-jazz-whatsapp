@@ -50,6 +50,7 @@ export function extractMetaIncomingMessages(payload) {
       const contactName = contacts[0]?.profile?.name || null;
 
       for (const msg of value.messages || []) {
+        const sender = msg.from || msg.from_user_id;
         let text = null;
         if (msg.type === 'text') {
           text = msg.text?.body || null;
@@ -62,18 +63,18 @@ export function extractMetaIncomingMessages(payload) {
           text = msg.button?.text || null;
         }
 
-        if (msg.from && text) {
+        if (sender && text) {
           messages.push({
             id: msg.id,
-            from: String(msg.from).replace(/^\+/, ''),
+            from: String(sender).replace(/^\+/, ''),
             contactName,
             text: text.trim(),
             type: msg.type,
           });
-        } else if (msg.from && msg.type) {
+        } else if (sender && msg.type) {
           messages.push({
             id: msg.id,
-            from: String(msg.from).replace(/^\+/, ''),
+            from: String(sender).replace(/^\+/, ''),
             contactName,
             text: null,
             type: msg.type,

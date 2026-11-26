@@ -70,6 +70,12 @@ export function createApp({ travelAgent = new TravelAgent() } = {}) {
     });
   });
 
+  app.get('/privacy', (_req, res) => {
+    res.type('text/plain; charset=utf-8').send(
+      'Asistente privado de planificación de viajes para uso familiar (Zaragoza - Nueva Orleans). Los mensajes se procesan únicamente para responder consultas de viaje dentro de este chat.',
+    );
+  });
+
   app.post('/api/chat', async (req, res) => {
     const parsed = ChatInputSchema.safeParse(req.body);
     if (!parsed.success) {

@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { config } from '../src/config.js';
+import { extractMetaIncomingMessages } from '../src/channels/metaWhatsApp.js';
 import { createApp } from '../src/server.js';
 import { SessionStore } from '../src/storage/sessionStore.js';
 import { TravelAgent } from '../src/agent/travelAgent.js';
@@ -44,7 +45,32 @@ test('GET / serves simulator HTML and /api/health returns status without leaking
     assert.equal(body.ok, true);
     assert.equal(body.service, 'nola-jazz-whatsapp');
     assert.equal('geminiApiKey' in body, false);
+
+    const privacyRes = await fetch(`${baseUrl}/privacy`);
+    assert.equal(privacyRes.status, 200);
   });
+});
+
+test('extractMetaIncomingMessages supports both from and from_user_id (BSUID)', () => {
+  const msgs = extractMetaIncomingMessages({
+    object: 'whatsapp_business_account',
+    entry: [
+      {
+        changes: [
+          {
+            value: {
+              messages: [
+                { id: 'm1', from_user_id: 'BSUID_123', type: 'text', text: { body: 'Hola jazz' } },
+              ],
+            },
+          },
+        ],
+      },
+    ],
+  });
+  assert.equal(msgs.length, 1);
+  assert.equal(msgs[0].from, 'BSUID_123');
+  assert.equal(msgs[0].text, 'Hola jazz');
 });
 
 test('POST /api/chat supports multi-turn Zaragoza -> NOLA flow in fallback mode and /api/reset clears it', async () => {

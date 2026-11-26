@@ -13,21 +13,21 @@ services:
         value: "true"
       - key: GEMINI_MODEL
         value: gemini-2.5-flash
+      - key: META_GRAPH_VERSION
+        value: v21.0
       - key: META_VERIFY_TOKEN
         value: nola-jazz-verify-2027
-      - key: TWILIO_WHATSAPP_NUMBER
-        value: whatsapp:+14155238886
       - key: GEMINI_API_KEY
         sync: false
-      - key: SERPAPI_API_KEY
+      - key: META_WHATSAPP_TOKEN
         sync: false
-      - key: TWILIO_ACCOUNT_SID
+      - key: META_PHONE_NUMBER_ID
         sync: false
-      - key: TWILIO_AUTH_TOKEN
-        sync: false
-      - key: PUBLIC_BASE_URL
+      - key: META_APP_SECRET
         sync: false
       - key: ALLOWED_PHONE_NUMBERS
+        sync: false
+      - key: SERPAPI_API_KEY
         sync: false
       - key: TRAVELER_NAME
         value: tu padre
