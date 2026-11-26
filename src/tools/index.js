@@ -182,6 +182,37 @@ export const TOOL_SPECS = [
       return { saved: true, travelNotebook: updated };
     },
   },
+  {
+    name: 'get_trip_summary',
+    description:
+      'Devuelve la hoja de ruta actual del viaje de Antonio (todo lo cerrado hasta ahora, lo que falta por decidir y el checklist de trámites y preparativos pendientes) para darle claridad y seguridad.',
+    parameters: {
+      type: 'object',
+      properties: {},
+    },
+    handler: async (_args, context) => {
+      if (!context?.sessionStore || !context?.sessionId) {
+        return { error: 'Sin almacenamiento de sesión activo' };
+      }
+      const session = await context.sessionStore.getSession(context.sessionId);
+      const prefs = session.preferences || {};
+      const pending = [];
+      if (!prefs.outboundDate || !prefs.returnDate) pending.push('Elegir fechas exactas de ida y vuelta');
+      if (!prefs.preferredOrigin) pending.push('Decidir salida por Madrid o Barcelona en AVE');
+      if (!prefs.chosenFlight) pending.push('Seleccionar y reservar vuelo');
+      if (!prefs.chosenHotel) pending.push('Seleccionar y reservar hotel (tarifa cancelación gratuita)');
+      pending.push(
+        'Pasaporte en vigor + ESTA oficial (https://esta.cbp.dhs.gov)',
+        'Seguro médico de viaje para EE. UU.',
+        'Reservar entradas con asiento en Preservation Hall y Snug Harbor',
+        'Avisar al banco en España, llevar billetes pequeños en USD y adaptador enchufe EE. UU.',
+      );
+      return {
+        travelNotebook: prefs,
+        pendingChecklist: pending,
+      };
+    },
+  },
 ];
 
 const TOOL_MAP = new Map(TOOL_SPECS.map((t) => [t.name, t]));

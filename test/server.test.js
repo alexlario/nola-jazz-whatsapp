@@ -108,6 +108,10 @@ test('save_traveler_preferences persists Antonio notebook and buildSystemPrompt 
     assert.match(prompt, /2027-02-11/);
     assert.match(prompt, /asiento de pasillo/);
     assert.doesNotMatch(prompt, /74/);
+
+    const summary = await executeTool('get_trip_summary', {}, { sessionStore: store, sessionId: 'wa:34600000000' });
+    assert.equal(summary.travelNotebook.preferredOrigin, 'MAD');
+    assert.ok(summary.pendingChecklist.some((item) => item.includes('ESTA')));
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }
