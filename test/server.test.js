@@ -51,7 +51,7 @@ test('GET / serves simulator HTML and /api/health returns status without leaking
   });
 });
 
-test('TravelAgent retries with gemini-3.8-flash when configured model returns 404', async () => {
+test('TravelAgent retries with gemini-3.5-flash-lite when configured model returns 404', async () => {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'nola-gemini-'));
   const store = new SessionStore(path.join(tmpDir, 'sessions.json'));
   const agent = new TravelAgent({ sessionStore: store });
@@ -67,7 +67,7 @@ test('TravelAgent retries with gemini-3.8-flash when configured model returns 40
           err.status = 404;
           throw err;
         }
-        return { text: '*Hola!* Respuesta desde Gemini 3.8 Flash.', functionCalls: [] };
+        return { text: '*Hola!* Respuesta desde Gemini 3.5 Flash Lite.', functionCalls: [] };
       },
     },
   };
@@ -75,9 +75,9 @@ test('TravelAgent retries with gemini-3.8-flash when configured model returns 40
   try {
     const res = await agent.reply('test-session', 'Hola');
     assert.equal(res.mode, 'gemini');
-    assert.match(res.text, /Gemini 3\.8 Flash/);
-    assert.deepEqual(calledModels, ['gemini-2.5-flash', 'gemini-3.8-flash']);
-    assert.equal(agent.activeGeminiModel, 'gemini-3.8-flash');
+    assert.match(res.text, /Gemini 3\.5 Flash Lite/);
+    assert.deepEqual(calledModels, ['gemini-2.5-flash', 'gemini-3.5-flash-lite']);
+    assert.equal(agent.activeGeminiModel, 'gemini-3.5-flash-lite');
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true });
   }

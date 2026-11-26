@@ -14,7 +14,7 @@ services:
       - key: STRICT_WEBHOOK_SIGNATURE
         value: "true"
       - key: GEMINI_MODEL
-        value: gemini-3.8-flash
+        value: gemini-3.5-flash-lite
       - key: META_GRAPH_VERSION
         value: v21.0
       - key: META_VERIFY_TOKEN

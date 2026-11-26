@@ -8,8 +8,8 @@ import { buildSystemPrompt } from './systemPrompt.js';
 import { runFallbackReply } from './fallbackEngine.js';
 
 const MAX_TOOL_ROUNDS = 4;
-const RECOMMENDED_GEMINI_MODEL = 'gemini-3.8-flash';
-const FAST_FALLBACK_GEMINI_MODEL = 'gemini-3.5-flash-lite';
+const RECOMMENDED_GEMINI_MODEL = 'gemini-3.5-flash-lite';
+const FAST_FALLBACK_GEMINI_MODEL = 'gemini-3.5-flash';
 
 function isModelNotFoundError(err) {
   const msg = String(err?.message || '');
