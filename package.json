@@ -1,0 +1,22 @@
+{
+  "name": "nola-jazz-whatsapp",
+  "version": "1.0.0",
+  "description": "Asistente de WhatsApp con IA para planificar viaje Zaragoza -> Nueva Orleans en febrero 2027 (fechas, vuelos, hoteles y jazz tradicional).",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "twilio": "^5.5.0",
+    "zod": "^3.24.2"
+  }
+}

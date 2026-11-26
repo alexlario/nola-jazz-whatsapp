@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NOLA Jazz Concierge — Simulador WhatsApp</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="phone-frame" aria-label="Simulador de WhatsApp">
+        <header class="wa-header">
+          <div class="wa-avatar" aria-hidden="true">🎷</div>
+          <div class="wa-title-block">
+            <h1>Asistente NOLA Jazz (Feb 2027)</h1>
+            <p id="status-line">Cargando estado…</p>
+          </div>
+          <button id="reset-btn" type="button" class="btn-ghost" title="Reiniciar conversación">
+            Reiniciar
+          </button>
+        </header>
+
+        <div id="chat-messages" class="wa-chat" role="log" aria-live="polite"></div>
+
+        <div class="quick-chips" aria-label="Preguntas rápidas">
+          <button type="button" class="chip" data-msg="Hola, ayúdame a planificar mi viaje a Nueva Orleans en febrero">
+            👋 Empezar paso a paso
+          </button>
+          <button type="button" class="chip" data-msg="Compara ir del 1 al 6 de febrero frente a ir justo después de Mardi Gras">
+            📅 1–6 feb vs post-Mardi Gras
+          </button>
+          <button type="button" class="chip" data-msg="¿Cómo es mejor viajar desde Zaragoza: AVE a Madrid o Barcelona, o salir del aeropuerto de Zaragoza?">
+            🚄✈️ Zaragoza → NOLA
+          </button>
+          <button type="button" class="chip" data-msg="¿Qué zonas y precios de hotel recomiendas para ver jazz cómodo y ahorrar?">
+            🏨 Hoteles y zonas
+          </button>
+          <button type="button" class="chip" data-msg="Dame un plan de noches para ver el mejor jazz tradicional y consejos prácticos">
+            🎷 Ruta de Jazz
+          </button>
+        </div>
+
+        <form id="chat-form" class="wa-input-bar">
+          <input
+            id="chat-input"
+            type="text"
+            placeholder="Escribe un mensaje como lo haría tu padre…"
+            autocomplete="off"
+            maxlength="800"
+            required
+          />
+          <button id="send-btn" type="submit">Enviar</button>
+        </form>
+      </section>
+
+      <aside class="info-panel">
+        <h2>Conexión a WhatsApp Real</h2>
+        <p class="subtitle">
+          Este simulador usa exactamente el mismo motor e inteligencia que los webhooks de WhatsApp.
+        </p>
+
+        <div class="status-card" id="health-card">
+          <h3>Estado del servidor</h3>
+          <ul id="health-list">
+            <li>Cargando configuración…</li>
+          </ul>
+        </div>
+
+        <div class="guide-card">
+          <h3>Opción más rápida (3 min): Twilio Sandbox</h3>
+          <ol>
+            <li>Crea una cuenta gratuita en Twilio y entra en <em>Messaging → Try it out → Send a WhatsApp message</em>.</li>
+            <li>Copia <code>TWILIO_ACCOUNT_SID</code> y <code>TWILIO_AUTH_TOKEN</code> en tu archivo <code>.env</code>.</li>
+            <li>Expón este servidor con <code>ngrok http 3000</code> (o despliega en Render/Railway) y pega <code>https://tu-url/webhook/twilio</code> en Sandbox Settings.</li>
+            <li>Tu padre envía el código de unión al número Sandbox de Twilio ¡y ya habla por WhatsApp!</li>
+          </ol>
+        </div>
+
+        <div class="guide-card">
+          <h3>Opción permanente (gratis hasta 1.000 msgs/mes): Meta Cloud API</h3>
+          <ol>
+            <li>Crea una app en <em>developers.facebook.com</em> y activa el producto <strong>WhatsApp</strong>.</li>
+            <li>Añade <code>META_WHATSAPP_TOKEN</code>, <code>META_PHONE_NUMBER_ID</code>, <code>META_APP_SECRET</code> y <code>META_VERIFY_TOKEN</code> en <code>.env</code>.</li>
+            <li>Configura el webhook en Meta apuntando a <code>https://tu-url/webhook/meta</code> y suscríbete al campo <code>messages</code>.</li>
+          </ol>
+        </div>
+      </aside>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
