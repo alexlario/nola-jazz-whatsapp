@@ -7,13 +7,43 @@ import { buildSystemPrompt } from './systemPrompt.js';
 import { runFallbackReply } from './fallbackEngine.js';
 
 const MAX_TOOL_ROUNDS = 4;
+const RECOMMENDED_GEMINI_MODEL = 'gemini-3.8-flash';
+
+function isModelNotFoundError(err) {
+  const msg = String(err?.message || '');
+  return err?.status === 404 || msg.includes('"code":404') || msg.includes('NOT_FOUND');
+}
 
 export class TravelAgent {
   constructor({ sessionStore = new SessionStore() } = {}) {
     this.sessionStore = sessionStore;
+    this.activeGeminiModel = config.ai.geminiModel || RECOMMENDED_GEMINI_MODEL;
     this.geminiClient = config.ai.geminiApiKey
       ? new GoogleGenAI({ apiKey: config.ai.geminiApiKey })
       : null;
+  }
+
+  async generateWithGeminiFallback(contents, configPayload) {
+    try {
+      return await this.geminiClient.models.generateContent({
+        model: this.activeGeminiModel,
+        contents,
+        config: configPayload,
+      });
+    } catch (err) {
+      if (this.activeGeminiModel !== RECOMMENDED_GEMINI_MODEL && isModelNotFoundError(err)) {
+        console.warn(
+          `[TravelAgent] Modelo ${this.activeGeminiModel} no disponible; cambiando a ${RECOMMENDED_GEMINI_MODEL}`,
+        );
+        this.activeGeminiModel = RECOMMENDED_GEMINI_MODEL;
+        return this.geminiClient.models.generateContent({
+          model: this.activeGeminiModel,
+          contents,
+          config: configPayload,
+        });
+      }
+      throw err;
+    }
   }
 
   async runWithGemini(history, userText) {
@@ -34,14 +64,10 @@ export class TravelAgent {
     const systemInstruction = buildSystemPrompt();
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
-      const response = await this.geminiClient.models.generateContent({
-        model: config.ai.geminiModel,
-        contents,
-        config: {
-          systemInstruction,
-          temperature: 0.4,
-          tools: [{ functionDeclarations }],
-        },
+      const response = await this.generateWithGeminiFallback(contents, {
+        systemInstruction,
+        temperature: 0.4,
+        tools: [{ functionDeclarations }],
       });
 
       const calls = response.functionCalls;
@@ -59,7 +85,7 @@ export class TravelAgent {
         const result = await executeTool(call.name, call.args || {});
         responseParts.push({
           functionResponse: {
-            id: call.id,
+            ...(call.id ? { id: call.id } : {}),
             name: call.name,
             response: { output: result },
           },
@@ -68,10 +94,9 @@ export class TravelAgent {
       contents.push({ role: 'user', parts: responseParts });
     }
 
-    const finalResponse = await this.geminiClient.models.generateContent({
-      model: config.ai.geminiModel,
-      contents,
-      config: { systemInstruction, temperature: 0.4 },
+    const finalResponse = await this.generateWithGeminiFallback(contents, {
+      systemInstruction,
+      temperature: 0.4,
     });
     return finalResponse.text || '';
   }

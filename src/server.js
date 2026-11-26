@@ -6,6 +6,7 @@ import { config, getPublicStatus } from './config.js';
 import { TravelAgent } from './agent/travelAgent.js';
 import { createRateLimiter } from './middleware/rateLimit.js';
 import {
+  ensureMetaWabaSubscribed,
   extractMetaIncomingMessages,
   markMetaMessageAsRead,
   sendMetaWhatsAppText,
@@ -108,10 +109,12 @@ export function createApp({ travelAgent = new TravelAgent() } = {}) {
 
   app.post('/webhook/meta', (req, res) => {
     if (!verifyMetaSignature(req)) {
+      console.warn('[Meta] Firma x-hub-signature-256 inválida');
       return res.status(403).send('Invalid signature');
     }
 
     const incoming = extractMetaIncomingMessages(req.body);
+    console.log(`[Meta] Webhook POST recibido (${incoming.length} mensaje(s))`);
     res.status(200).send('EVENT_RECEIVED');
 
     for (const msg of incoming) {
@@ -130,6 +133,7 @@ export function createApp({ travelAgent = new TravelAgent() } = {}) {
       }
 
       if (!checkRateLimit(`wa:${msg.from}`).allowed) {
+        console.warn(`[Meta] Límite de peticiones alcanzado para ${msg.from}`);
         continue;
       }
 
@@ -144,8 +148,9 @@ export function createApp({ travelAgent = new TravelAgent() } = {}) {
             return;
           }
 
-          const { text } = await travelAgent.reply(`wa:${msg.from}`, msg.text);
+          const { text, mode } = await travelAgent.reply(`wa:${msg.from}`, msg.text);
           await sendMetaWhatsAppText(msg.from, text);
+          console.log(`[Meta] Respuesta enviada (${mode}) a ${msg.from}`);
         } catch (err) {
           console.error('[Meta] Error respondiendo mensaje:', err.message);
         }
@@ -239,5 +244,6 @@ if (isMainModule) {
     console.log(`   • Precios en vivo (SerpApi): ${status.livePricesEnabled ? 'Activo' : 'Desactivado (usa rangos + enlaces)'}`);
     console.log(`   • Meta Cloud API: ${status.metaConfigured ? 'Configurado' : 'Pendiente en .env'}`);
     console.log(`   • Twilio Sandbox: ${status.twilioConfigured ? 'Configurado' : 'Pendiente en .env'}\n`);
+    void ensureMetaWabaSubscribed();
   });
 }

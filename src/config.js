@@ -17,7 +17,7 @@ export const config = {
 
   ai: {
     geminiApiKey: (process.env.GEMINI_API_KEY || '').trim(),
-    geminiModel: (process.env.GEMINI_MODEL || 'gemini-2.5-flash').trim(),
+    geminiModel: (process.env.GEMINI_MODEL || 'gemini-3.8-flash').trim(),
     openaiApiKey: (process.env.OPENAI_API_KEY || '').trim(),
     openaiModel: (process.env.OPENAI_MODEL || 'gpt-4o-mini').trim(),
   },
@@ -27,6 +27,7 @@ export const config = {
   meta: {
     token: (process.env.META_WHATSAPP_TOKEN || '').trim(),
     phoneNumberId: (process.env.META_PHONE_NUMBER_ID || '').trim(),
+    wabaId: (process.env.META_WABA_ID || '').trim(),
     verifyToken: (process.env.META_VERIFY_TOKEN || 'nola-jazz-verify-2027').trim(),
     appSecret: (process.env.META_APP_SECRET || '').trim(),
     graphVersion: (process.env.META_GRAPH_VERSION || 'v21.0').trim(),

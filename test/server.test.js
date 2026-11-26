@@ -51,6 +51,38 @@ test('GET / serves simulator HTML and /api/health returns status without leaking
   });
 });
 
+test('TravelAgent retries with gemini-3.8-flash when configured model returns 404', async () => {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'nola-gemini-'));
+  const store = new SessionStore(path.join(tmpDir, 'sessions.json'));
+  const agent = new TravelAgent({ sessionStore: store });
+  const calledModels = [];
+
+  agent.activeGeminiModel = 'gemini-2.5-flash';
+  agent.geminiClient = {
+    models: {
+      generateContent: async ({ model }) => {
+        calledModels.push(model);
+        if (model === 'gemini-2.5-flash') {
+          const err = new Error('{"error":{"code":404,"status":"NOT_FOUND"}}');
+          err.status = 404;
+          throw err;
+        }
+        return { text: '*Hola!* Respuesta desde Gemini 3.8 Flash.', functionCalls: [] };
+      },
+    },
+  };
+
+  try {
+    const res = await agent.reply('test-session', 'Hola');
+    assert.equal(res.mode, 'gemini');
+    assert.match(res.text, /Gemini 3\.8 Flash/);
+    assert.deepEqual(calledModels, ['gemini-2.5-flash', 'gemini-3.8-flash']);
+    assert.equal(agent.activeGeminiModel, 'gemini-3.8-flash');
+  } finally {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
 test('extractMetaIncomingMessages supports both from and from_user_id (BSUID)', () => {
   const msgs = extractMetaIncomingMessages({
     object: 'whatsapp_business_account',

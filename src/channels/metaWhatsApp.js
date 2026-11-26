@@ -139,3 +139,22 @@ export async function sendMetaWhatsAppText(to, text) {
   }
   return results;
 }
+
+export async function ensureMetaWabaSubscribed() {
+  if (!config.meta.token || !config.meta.wabaId) return;
+  const url = `https://graph.facebook.com/${config.meta.graphVersion}/${config.meta.wabaId}/subscribed_apps`;
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${config.meta.token}` },
+    });
+    const text = await res.text();
+    if (!res.ok) {
+      console.warn(`[Meta] No se pudo suscribir WABA (${res.status}): ${text.slice(0, 200)}`);
+      return;
+    }
+    console.log('[Meta] WABA suscrita correctamente a la app:', text);
+  } catch (err) {
+    console.warn('[Meta] Error suscribiendo WABA:', err.message);
+  }
+}
